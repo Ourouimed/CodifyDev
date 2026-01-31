@@ -121,5 +121,20 @@ const logout = async (req, res) => {
 }
 
 
+const githubAuthLogin = (req, res) => {
+    const user = req.user
+    const payload = { id: user._id , email: user.email};
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+            
+    
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+        maxAge: 3600000,
+    })
+    res.redirect('http://localhost:3000');
+  }
 
-export { register , login , verifySession , logout}
+
+export { register , login , verifySession , logout , githubAuthLogin}

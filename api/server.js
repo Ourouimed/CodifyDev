@@ -8,6 +8,8 @@ import connectDB from './config/db.js';
 // import routes
 import authRouter from './routes/auth.js'
 
+import './config/passport.js'
+
 
 config()
 const PORT = process.env.PORT || 5000;     
