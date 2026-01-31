@@ -1,13 +1,31 @@
 'use client'
 import { Terminal } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import LoginForm from "@/components/LoginForm"
 import RegisterForm from "@/components/RegisterForm"
+import { verifySession } from "@/store/features/auth/authSlice"
+import { useDispatch, useSelector } from "react-redux"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 
 const Auth = ()=>{
     const [authMode , setAuthMode] = useState('login')
+    const dispatch = useDispatch()
+    const router = useRouter()
+    const { user , isInitialized } = useAuth() 
+
+      useEffect(() => {
+        dispatch(verifySession());
+      }, [dispatch]);
+
+
+      useEffect(() => {
+        if (user && isInitialized) {
+            router.push('/')
+        }
+  }, [user, router]);
 
     const handleSwitchMode = (mode)=>{
         setAuthMode(mode)
@@ -36,7 +54,7 @@ const Auth = ()=>{
                     </Button>
                 </div>
 
-                {authMode === 'login' ? <LoginForm/> : <RegisterForm/>}
+                {authMode === 'login' ? <LoginForm/> : <RegisterForm onRegisterSuccess={()=> handleSwitchMode('login')}/>}
             </div>
 
             
