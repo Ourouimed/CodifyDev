@@ -8,9 +8,11 @@ import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
 import { loginUser } from "@/store/features/auth/authSlice"
 import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/hooks/useToast"
 
 const LoginForm = ()=>{
     const dispatch = useDispatch()
+    const toast = useToast()
     const { isLoading } = useAuth()
     const router = useRouter()
     const [loginForm , setLoginForm] = useState({
@@ -38,9 +40,11 @@ const LoginForm = ()=>{
             if (validateForm()) {
                 try {
                     await dispatch(loginUser(loginForm)).unwrap();
+                    toast.success('Login successfull')
                     router.push('/')
                 } catch (err) {
                    console.log(err)
+                   toast.error(err)
                 }
             }
         };
