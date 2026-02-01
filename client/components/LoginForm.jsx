@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation"
 import { loginUser } from "@/store/features/auth/authSlice"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
+import { GithubAuthBtn } from "./ui/GithubAuthBtn"
+import { GoogleAuthBtn } from "./ui/GoogleAuthBtn"
 
 const LoginForm = ()=>{
     const dispatch = useDispatch()
@@ -41,7 +43,7 @@ const LoginForm = ()=>{
                 try {
                     await dispatch(loginUser(loginForm)).unwrap();
                     toast.success('Login successfull')
-                    router.push('/')
+                    router.push('/feed')
                 } catch (err) {
                    console.log(err)
                    toast.error(err)
@@ -87,15 +89,9 @@ const LoginForm = ()=>{
         </Divider>
 
         {/* Social login*/}
-        <div className="space-y-2">
-            <Button className='w-full justify-center'>
-                <Github className="mr-2 h-4 w-4"/> Continue with GitHub
-            </Button> 
-
-
-            <Button className='w-full justify-center' variant="outline">
-                <GoogleIcon className="mr-2 h-4 w-4"/> Continue with Google
-            </Button> 
+        <div className="space-y-2">    
+            <GithubAuthBtn/>
+            <GoogleAuthBtn variant='outline'/>
         </div>
     </div>
 }

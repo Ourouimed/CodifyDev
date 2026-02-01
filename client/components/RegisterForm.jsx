@@ -2,11 +2,12 @@ import { AtSign, Github, Loader2, Lock, Mail, User } from "lucide-react";
 import { Button } from "./ui/Button";
 import { Input } from "./ui/Input";
 import { Divider } from "./ui/Divider";
-import { GoogleIcon } from "./icons/Google";
 import { register } from "@/store/features/auth/authSlice";
 import { useState } from "react";
 import { useDispatch } from "react-redux"
 import { useAuth } from "@/hooks/useAuth";
+import { GithubAuthBtn } from "./ui/GithubAuthBtn";
+import { GoogleAuthBtn } from "./ui/GoogleAuthBtn";
 
 const RegisterForm = ({onRegisterSuccess}) => {
     const [registerForm, setRegisterForm] = useState({
@@ -127,13 +128,10 @@ const RegisterForm = ({onRegisterSuccess}) => {
 
             <Divider>Or Continue with</Divider>
 
-            <div className="space-y-2">
-                <Button className='w-full justify-center'>
-                    <Github className="mr-2 h-4 w-4" /> Continue with GitHub
-                </Button>
-                <Button className='w-full justify-center' variant="outline">
-                    <GoogleIcon className="mr-2 h-4 w-4" /> Continue with Google
-                </Button>
+            {/* Social login*/}
+            <div className="space-y-2">    
+                <GithubAuthBtn/>
+                <GoogleAuthBtn variant='outline'/>
             </div>
         </div>
     );

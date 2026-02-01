@@ -19,5 +19,12 @@ const verifySession = async ()=>{
 }
 
 
-const authService = { register , login , verifySession}
+const logout = async ()=>{
+    const respone = await axiosService.post(`/api/auth/logout`)
+    return respone.data
+}
+
+
+
+const authService = { register , login , verifySession , logout}
 export default authService

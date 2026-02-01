@@ -23,7 +23,7 @@ const Auth = ()=>{
 
       useEffect(() => {
         if (user && isInitialized) {
-            router.push('/')
+            router.push('/feed')
         }
   }, [user, router]);
 
