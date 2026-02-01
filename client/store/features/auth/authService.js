@@ -24,7 +24,12 @@ const logout = async ()=>{
     return respone.data
 }
 
+const updateProfile = async (data)=>{
+    const respone = await axiosService.post('/api/auth/profile/update' , data , {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+    return respone.data
+}
 
-
-const authService = { register , login , verifySession , logout}
+const authService = { register , login , verifySession , logout , updateProfile}
 export default authService
