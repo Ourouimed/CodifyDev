@@ -15,15 +15,11 @@ const UserSchema = new mongoose.Schema({
 
   } , 
   avatar: String,
+  banner : String , 
   bio : String , 
   provider: String , 
   githubId: { type: String, unique: true, sparse: true },
   googleId: { type: String, unique: true, sparse: true },
-  
-  methods: [{ 
-    type: String, 
-    enum: ['local', 'github', 'google'] 
-  }]
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);

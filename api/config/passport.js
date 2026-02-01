@@ -41,7 +41,7 @@ passport.use(new GoogleStrategy({
         { googleId: profile.id },
         {
           googleId: profile.id,
-          username: profile.displayName,
+          username: profile.emails?.[0]?.value.split('@')[0],
           displayName: profile.displayName,
           email: profile.emails?.[0]?.value,
           avatar: profile.photos?.[0]?.value,

@@ -2,6 +2,7 @@ import User from "../models/User.js"
 import bcrypt from 'bcryptjs'
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken'
+import { uploadImage } from "../lib/upload-image.js";
 
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
@@ -63,8 +64,6 @@ const login = async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
-        console.log(doc)
-
          // Generate JWT token
         const payload = { id: doc._id , email: doc.email};
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
@@ -79,7 +78,10 @@ const login = async (req, res) => {
             message: "Login successful", user : {
                 name : doc.displayName , 
                 email : doc.email ,
+                bio : doc.bio || "",
+                banner : doc.banner || null ,
                 username : doc.username ,
+                avatar : doc.avatar || null ,
                 createdAt : doc.createdAt , updatedAt : doc.updatedAt
             }})
     }
@@ -101,7 +103,10 @@ const verifySession = async (req, res) => {
             message: "Session valid", user : {
                 name : docUser.displayName , 
                 email : docUser.email ,
+                bio : docUser.bio || "",
+                banner : docUser.banner || null ,
                 username : docUser.username ,
+                avatar : docUser.avatar || null ,
                 createdAt : docUser.createdAt , updatedAt : docUser.updatedAt
             }})
     }
@@ -137,4 +142,58 @@ const authCallback = (req, res) => {
   }
 
 
-export { register , login , verifySession , logout , authCallback}
+const updateProfile = async (req , res)=>{
+    try {
+        const { name , username , bio , avatar} = req.body
+        const avatarFile = req.files?.['avatar']?.[0];
+        const bannerFile = req.files?.['banner']?.[0];
+
+        if (!name || !username){
+            return res.status(400).json({error : 'Some required fields are missing'})
+        }
+
+        let avatar_url
+        let banner_url
+
+        if (avatarFile?.buffer){
+            avatar_url = await uploadImage(avatarFile?.buffer , 'avatars')
+        }
+
+        if (bannerFile?.buffer){
+            banner_url = await uploadImage(bannerFile?.buffer , 'banners')
+        }
+
+        console.log(avatar_url)
+
+        console.log(req.user)
+        const updatedUser = await User.findByIdAndUpdate(req.user.id , {
+                $set: {
+                    name: req.body.name,
+                    bio: req.body.bio,
+                    ...(avatar_url && { avatar: avatar_url }),
+                    ...(banner_url && { banner: banner_url }),
+                }
+            },
+            { new: true })
+        console.log(updatedUser)
+        res.json({message : 'User updated successfully' , user : {
+                name : updatedUser.displayName , 
+                email : updatedUser.email ,
+                bio : updatedUser.bio || "",
+                banner : updatedUser.banner || null , 
+                username : updatedUser.username ,
+                avatar : updatedUser.avatar || null ,
+                createdAt : updatedUser.createdAt , updatedAt : updatedUser.updatedAt
+            }})
+    }
+
+    catch (err){
+        console.log(err)
+        return res.status(500).json({
+            error : 'Internal server error'
+        })
+    }
+}
+
+
+export { register , login , verifySession , logout , authCallback , updateProfile}
