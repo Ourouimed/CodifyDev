@@ -121,7 +121,7 @@ const logout = async (req, res) => {
 }
 
 
-const githubAuthLogin = (req, res) => {
+const authCallback = (req, res) => {
     const user = req.user
     const payload = { id: user._id , email: user.email};
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
@@ -137,4 +137,4 @@ const githubAuthLogin = (req, res) => {
   }
 
 
-export { register , login , verifySession , logout , githubAuthLogin}
+export { register , login , verifySession , logout , authCallback}
