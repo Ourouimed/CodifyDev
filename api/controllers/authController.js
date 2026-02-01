@@ -138,7 +138,7 @@ const authCallback = (req, res) => {
         sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
         maxAge: 3600000,
     })
-    res.redirect('http://localhost:3000');
+    res.redirect('http://localhost:3000/feed');
   }
 
 
@@ -175,7 +175,6 @@ const updateProfile = async (req , res)=>{
                 }
             },
             { new: true })
-        console.log(updatedUser)
         res.json({message : 'User updated successfully' , user : {
                 name : updatedUser.displayName , 
                 email : updatedUser.email ,

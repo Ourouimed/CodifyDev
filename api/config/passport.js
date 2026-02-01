@@ -1,7 +1,8 @@
-import passport from 'passport' 
-import { Strategy as GitHubStrategy} from 'passport-github2'
+import passport from 'passport';
+import { Strategy as GitHubStrategy } from 'passport-github2';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import User from '../models/User.js'
+import User from '../models/User.js';
+
 // GitHub Strategy
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
@@ -10,17 +11,31 @@ passport.use(new GitHubStrategy({
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
+      // We look for the user by their GitHub ID
       const user = await User.findOneAndUpdate(
         { githubId: profile.id }, 
         {
-          githubId: profile.id,
-          username: profile.username,
-          displayName: profile.displayName,
-          email: profile.emails?.[0]?.value,
-          avatar: profile._json.avatar_url,
-          provider: 'github'
+          // 1. $set: Updates these EVERY time the user logs in
+          $set: { 
+            githubId: profile.id,
+            provider: 'github',
+            lastLogin: new Date() // Useful for tracking activity
+          },
+          // 2. $setOnInsert: ONLY saves these if the user is being created (new)
+          $setOnInsert: {
+            username: profile.username ,
+            displayName: profile.displayName,
+            email: profile.emails?.[0]?.value,
+            avatar: profile._json.avatar_url,
+            bio: "", 
+            banner: "" 
+          }
         },
-        { new: true, upsert: true } // Create if doesn't exist, update if it does
+        { 
+          new: true,    // Return the updated/created document
+          upsert: true, // Create a new document if one isn't found
+          runValidators: true 
+        }
       );
       return done(null, user);
     } catch (err) {
@@ -40,14 +55,27 @@ passport.use(new GoogleStrategy({
       const user = await User.findOneAndUpdate(
         { googleId: profile.id },
         {
-          googleId: profile.id,
-          username: profile.emails?.[0]?.value.split('@')[0],
-          displayName: profile.displayName,
-          email: profile.emails?.[0]?.value,
-          avatar: profile.photos?.[0]?.value,
-          provider: 'google'
+          // Updates these every time
+          $set: { 
+            googleId: profile.id,
+            provider: 'google',
+            lastLogin: new Date()
+          },
+          // Saves these ONLY on the very first login
+          $setOnInsert: {
+            username: profile.emails?.[0]?.value.split('@')[0],
+            displayName: profile.displayName,
+            email: profile.emails?.[0]?.value,
+            avatar: profile.photos?.[0]?.value,
+            bio: "",
+            banner: ""
+          }
         },
-        { new: true, upsert: true }
+        { 
+          new: true, 
+          upsert: true,
+          runValidators: true 
+        }
       );
       return done(null, user);
     } catch (err) {
@@ -55,3 +83,5 @@ passport.use(new GoogleStrategy({
     }
   }
 ));
+
+export default passport;
