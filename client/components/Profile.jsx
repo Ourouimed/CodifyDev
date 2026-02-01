@@ -10,7 +10,7 @@ const Profile = ({user})=>{
                 {/* Cover Photo */}
                 <div className="w-full bg-primary h-48 relative">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />
-                    <img src={user?.banner} alt={"Banner"}  className="w-full h-full object-cover"/>
+                    {user?.banner && <img src={user?.banner} alt={"Banner"}  className="w-full h-full object-cover"/>}
                 </div>
 
                 <div className="p-6">

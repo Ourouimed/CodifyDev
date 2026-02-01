@@ -32,6 +32,18 @@ export default function UpdateProfile({ profile }) {
     banner: profile.banner || null,
   });
 
+  const [errors , setErrors ] = useState({})
+
+  const validationForm = ()=>{
+    const newErrors = {}
+    if(!profileForm.name.trim()) newErrors.name = 'Name is required'
+    if(!profileForm.username.trim()) newErrors.username = 'Username is required'
+    if(profileForm.bio.length > 500) newErrors.bio = 'Bio too long' 
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleChange = (e) => {
     const { id, value, type, files } = e.target;
 
@@ -50,24 +62,26 @@ export default function UpdateProfile({ profile }) {
   };
 
   const handleUpdateProfile = async (e) => {
-    const formData = new FormData();
-    formData.append("name", profileForm.name);
-    formData.append("username", profileForm.username);
-    formData.append("bio", profileForm.bio);
-    
-    // Append files only if they were selected
-    if (profileForm.avatar) formData.append("avatar", profileForm.avatar);
-    if (profileForm.banner) formData.append("banner", profileForm.banner);
+    if (validationForm()) {
+        const formData = new FormData();
+        formData.append("name", profileForm.name);
+        formData.append("username", profileForm.username);
+        formData.append("bio", profileForm.bio);
+        
+        // Append files only if they were selected
+        if (profileForm.avatar) formData.append("avatar", profileForm.avatar);
+        if (profileForm.banner) formData.append("banner", profileForm.banner);
 
 
-    try {
-        await dispatch(update(formData)).unwrap()
-        toast.success('Profile updated successfully')
-        closePopup()
+        try {
+            await dispatch(update(formData)).unwrap()
+            toast.success('Profile updated successfully')
+            closePopup()
+        }
+        catch (err){    
+                toast.error(err)
+        }   
     }
-    catch (err){    
-            toast.error(err)
-    }   
   };
 
   return (
@@ -113,17 +127,25 @@ export default function UpdateProfile({ profile }) {
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="name">Full Name</label>
           <Input id="name" value={profileForm.name} onChange={handleChange} />
+          {errors.name && <p className="text-red-500 text-[10px]">{errors.name}</p>}
         </div>
 
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="username">Username</label>
           <Input id="username" value={profileForm.username} onChange={handleChange} />
+            {errors.username && <p className="text-red-500 text-[10px]">{errors.username}</p>}
         </div>
 
 
         <div className="space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="bio">Bio</label>
           <TextArea id="bio" value={profileForm.bio} onChange={handleChange} />
+          <div className="flex items-center justify-between">
+            {errors.bio && <p className="text-red-500 text-[10px]">{errors.bio}</p>}
+            <p className={` text-xs ${profileForm.bio.length > 500 ? 'text-red-500' : 'text-gray-500'}`}>
+                {profileForm.bio.length}/500
+            </p>
+          </div>
         </div>
       </div>
 
