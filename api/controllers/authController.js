@@ -128,6 +128,40 @@ const logout = async (req, res) => {
 }
 
 
+const getProfile = async (req , res)=>{
+    try {
+        const { id } = req.params
+
+        if (!id){
+            return res.status(400).json({error : 'Id is required'})
+        }
+
+        const profile = await User.findOne({username : id})
+        if (!profile){
+            return res.status(404).json({error : 'User not found'})
+        }
+
+
+        return res.json({profile : {
+                name : profile.displayName , 
+                email : profile.email ,
+                bio : profile.bio || "",
+                banner : profile.banner || null , 
+                username : profile.username ,
+                avatar : profile.avatar || null ,
+                createdAt : profile.createdAt , updatedAt : profile.updatedAt , 
+                ...(profile.githubUsername && { githubUsername: profile.githubUsername }),
+                ...(profile.googleId && { googleId: profile.googleId }),
+            }})
+    }
+
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+    
+}
+
 const authCallback = (req, res) => {
     const user = req.user
 
@@ -199,4 +233,4 @@ const updateProfile = async (req , res)=>{
 }
 
 
-export { register , login , verifySession , logout , authCallback , updateProfile}
+export { register , login , verifySession , logout , authCallback , updateProfile , getProfile}

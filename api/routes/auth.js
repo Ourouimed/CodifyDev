@@ -1,7 +1,7 @@
 import express from 'express'
 import verifyJWT from '../middlewares/verifyJWT.js'
 import passport from 'passport';
-import { authCallback, login, logout, register, updateProfile, verifySession } from '../controllers/authController.js'
+import { authCallback, getProfile, login, logout, register, updateProfile, verifySession } from '../controllers/authController.js'
 import { config } from 'dotenv';
 import multer from 'multer'
 
@@ -25,6 +25,8 @@ router.post('/profile/update' , verifyJWT , upload.fields([
     { name: 'avatar', maxCount: 1 },
     { name: 'banner', maxCount: 1 }
   ]) , updateProfile)
+
+router.get('/profile/:id' , verifyJWT , getProfile)
 
 router.get('/github' , (req , res , next ) => {
     passport.authenticate('github', { scope: ['user:email'] })(req , res , next)
