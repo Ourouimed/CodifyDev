@@ -11,14 +11,15 @@ const UserSchema = new mongoose.Schema({
   displayName: String,
   username : {
     type : String, 
-    unique : true 
-
+    unique : true ,
+    lowercase: true
   } , 
   avatar: String,
   banner : String , 
   bio : String , 
   provider: String , 
   githubId: { type: String, unique: true, sparse: true },
+  githubUsername : { type: String, unique: true, sparse: true ,  lowercase: true},
   googleId: { type: String, unique: true, sparse: true },
 }, { timestamps: true });
 

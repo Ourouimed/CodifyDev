@@ -107,7 +107,9 @@ const verifySession = async (req, res) => {
                 banner : docUser.banner || null ,
                 username : docUser.username ,
                 avatar : docUser.avatar || null ,
-                createdAt : docUser.createdAt , updatedAt : docUser.updatedAt
+                createdAt : docUser.createdAt , updatedAt : docUser.updatedAt ,
+                ...(docUser.githubUsername && { githubUsername: docUser.githubUsername }),
+                ...(docUser.googleId && { googleId: docUser.googleId }),
             }})
     }
     catch (err) {
@@ -128,6 +130,10 @@ const logout = async (req, res) => {
 
 const authCallback = (req, res) => {
     const user = req.user
+
+    if (!user) return res.redirect('http://localhost:3000/auth');
+
+    
     const payload = { id: user._id , email: user.email};
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
             
@@ -162,10 +168,6 @@ const updateProfile = async (req , res)=>{
         if (bannerFile?.buffer){
             banner_url = await uploadImage(bannerFile?.buffer , 'banners')
         }
-
-        console.log(avatar_url)
-
-        console.log(req.user)
         const updatedUser = await User.findByIdAndUpdate(req.user.id , {
                 $set: {
                     name: req.body.name,
@@ -182,7 +184,9 @@ const updateProfile = async (req , res)=>{
                 banner : updatedUser.banner || null , 
                 username : updatedUser.username ,
                 avatar : updatedUser.avatar || null ,
-                createdAt : updatedUser.createdAt , updatedAt : updatedUser.updatedAt
+                createdAt : updatedUser.createdAt , updatedAt : updatedUser.updatedAt , 
+                ...(updatedUser.githubUsername && { githubUsername: updatedUser.githubUsername }),
+                ...(updatedUser.googleId && { googleId: updatedUser.googleId }),
             }})
     }
 

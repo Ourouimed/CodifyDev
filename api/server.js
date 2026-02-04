@@ -22,7 +22,6 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 
 
-connectDB()
 
 
 
@@ -35,6 +34,13 @@ app.get('/', (req, res) => {
 app.use('/api/auth' , authRouter)
 
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  console.log('Connecting server ...')
+  await connectDB();         
+
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+};
+
+startServer();

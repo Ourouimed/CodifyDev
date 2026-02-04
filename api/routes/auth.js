@@ -26,7 +26,11 @@ router.post('/profile/update' , verifyJWT , upload.fields([
     { name: 'banner', maxCount: 1 }
   ]) , updateProfile)
 
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github' , (req , res , next ) => {
+    passport.authenticate('github', { scope: ['user:email'] })(req , res , next)
+  });
+
+
 router.get('/github/callback', 
   passport.authenticate('github', { session: false, failureRedirect: 'http://localhost:3000/auth' }),
   authCallback
