@@ -89,10 +89,10 @@ const Header = ({ user, onLogout }) => {
                             </div>
                             
                            <div>
-                                <Link href='/profile' className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary transition-colors">
+                                <Link href={`/profile/${user?.username}`} className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary transition-colors">
                                     <User size={16} /> Profile
                                 </Link>
-                                <Link href={'/ddd'} className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary transition-colors">
+                                <Link href={'/settings'} className="w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-secondary transition-colors">
                                     <Settings size={16} /> Settings
                                 </Link>
                            </div>

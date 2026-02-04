@@ -6,7 +6,7 @@ const Profile = ({user})=>{
     const handleOpenUpdateProfilePopup = ()=>{
             openPopup({title : 'Test' , component : 'UpdateProfile' , props : {profile : user}})
     }
-    return <div className="bg-background rounded-lg border border-border overflow-hidden">
+    return <div className="bg-background rounded-2xl border border-border overflow-hidden">
                 {/* Cover Photo */}
                 <div className="w-full bg-primary h-48 relative">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/10" />

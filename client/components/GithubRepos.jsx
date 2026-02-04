@@ -1,7 +1,8 @@
-import { getGithubRepos } from "@/lib/getGithubRepos"
+import { getGithubRepos } from "@/services/getGithubRepos"
 import { useEffect, useState } from "react"
 import RepoItem from "./ui/RepoItem"
 import { Button } from "./ui/Button"
+import { Github } from "lucide-react"
 
 const GithubRepos = ({ username }) => {
     const [repos, setRepos] = useState([])
@@ -27,14 +28,29 @@ const GithubRepos = ({ username }) => {
     if (loading) return <div className="mt-8 text-center animate-pulse">Loading repositories...</div>
 
     return (
-        <div className="py-4">
-            <div className="flex items-center justify-between mb-6 border-b pb-4 border-border">
-                <h3 className="text-xl font-bold flex items-center gap-2">
-                    Public Repositories
-                    <span className="bg-muted text-muted-foreground text-sm py-0.5 px-2 rounded-full border border-border">
-                        {repos.length}
+        <div className="py-4 space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
+
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-secondary/80 rounded-xl border border-border shadow-sm">
+                        <Github className="w-5 h-5 text-foreground" />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg tracking-tight leading-none">Open Source</h3>
+                        <p className="text-xs text-muted-foreground mt-1 font-medium">
+                            Latest repositories from GitHub
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+                        Public Repos
                     </span>
-                </h3>
+                    <div className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-full text-primary text-sm font-bold">
+                        {repos?.length || 0}
+                    </div>
+                </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-1 min-h-[400px]">
