@@ -27,7 +27,6 @@ const FeedHomePage = () => {
 
     const handlePostSubmit = async () => {
         if (!content.trim()) return
-        console.log(isLoading)
         try {
             await dispatch(createPost(content)).unwrap()
             toast.success('Post created successfully')
@@ -74,8 +73,8 @@ const FeedHomePage = () => {
                                 </span>
                                 <Button 
                                     onClick={handlePostSubmit}
-                                    disabled={!content.trim() || content.length > 250}
-                                    className={content.length === 0 || content.length > 250? 'opacity-70' : 'opacity-100'}
+                                    disabled={!content.trim()}
+                                    className={content.length === 0 ? 'opacity-70' : 'opacity-100'}
                                     variant="PRIMARY" 
                                 >
                                     {isLoading && <Loader2 className={isLoading && 'animate-spin'}/>}
