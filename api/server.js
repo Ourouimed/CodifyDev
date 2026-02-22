@@ -7,6 +7,7 @@ import bodyParser from 'body-parser';
 import connectDB from './config/db.js';
 // import routes
 import authRouter from './routes/auth.js'
+import postRouter from './routes/post.js'
 
 import './config/passport.js'
 
@@ -32,6 +33,7 @@ app.get('/', (req, res) => {
 
 // configure routes 
 app.use('/api/auth' , authRouter)
+app.use('/api/posts' , postRouter)
 
 
 const startServer = async () => {
