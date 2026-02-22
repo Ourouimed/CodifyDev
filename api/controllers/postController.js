@@ -52,4 +52,60 @@ const getAllPosts = async (req, res) => {
     }
 };
 
-export { createPost , getAllPosts}
+
+const getPostById = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const post = await Post.findById(postId)
+            .populate('author', 'username avatar displayName') 
+            .populate('comments.author', 'username')
+            .sort({ createdAt: -1 }).
+            lean();
+
+        const processedPost = {
+            ...post,
+            isLiked: req.user?.id 
+                ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
+                    : false,
+                likeCount: post.likes.length
+            };  
+    
+        return res.json({post : processedPost});
+        
+    } catch (err) {
+        console.error("Error fetching posts:", err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+};
+
+
+const likePost = async (req, res) => {
+    try {
+        const { postId } = req.params
+        const userId = req.user.id 
+
+
+        const post = await Post.findById(postId)
+        if (!post){
+            return res.status(404).json({error : 'Post not found'})
+        } 
+        const isLiked = post.likes.some(id => id.toString() === userId.toString())
+        if (isLiked){
+            post.likes = post.likes.filter(id => id.toString() !== userId.toString())
+        }
+        else {
+            post.likes.push(userId)
+        }
+        await post.save()
+        return res.json({message : 'Post liked/unliked successfully' , post})
+    }
+    catch (err) {
+        console.error("Error liking post:", err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }   
+}
+export { createPost , getAllPosts , getPostById , likePost }
