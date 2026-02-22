@@ -2,7 +2,6 @@ import { usePopup } from "@/hooks/usePopup"
 import { Button } from "./ui/Button"
 import { useToast } from "@/hooks/useToast"
 import { Edit, Share, UserCheck, UserPlus } from "lucide-react"
-import { useDispatch } from "react-redux"
 import { followUnfollow } from "@/services/followUnfollow"
 import Image from "next/image"
 
@@ -61,16 +60,17 @@ const Profile = ({user , isMyProfile , setProfile})=>{
                         <div className="flex gap-2 pb-2">
                             {isMyProfile ? 
                                 <Button variant="outline" onClick={handleOpenUpdateProfilePopup}>
-                                    <Edit className="w-3.5 h-3.5"/> Edit Profile
+                                    <Edit className="w-3.5 h-3.5"/> 
+                                    <span className="text-xs sm:text-sm">Edit Profile</span>
                                 </Button> : 
                                 <Button variant="outline" onClick={handleFollowUnfollow}>
-                                    {user.isFollowing ? 'Unfollow' : 'Follow'} 
+                                    <span className="text-xs sm:text-sm">{user.isFollowing ? 'Unfollow' : 'Follow'}</span>
                                     {user.isFollowing ? 
                                         <UserCheck className="w-3.5 h-3.5"/> : 
                                         <UserPlus className="w-3.5 h-3.5"/>
                                     }
                                 </Button>}
-                            <Button onClick={handleShare}>Share <Share className="w-3.5 h-3.5"/></Button>
+                            <Button onClick={handleShare}><span className="text-xs sm:text-sm">Share</span> <Share className="w-3.5 h-3.5"/></Button>
                         </div>
                     </div>
 

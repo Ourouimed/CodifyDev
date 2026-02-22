@@ -15,7 +15,7 @@ const CreatePostArea = () => {
     const [previews, setPreviews] = useState([])
     const dispatch = useDispatch()
     const toast = useToast()
-    const { isLoading, isPosting } = usePosts()
+    const { isPosting } = usePosts()
         
     const fileInputRef = useRef(null)
     // 2. Generate Previews and Cleanup Memory
@@ -76,6 +76,8 @@ const CreatePostArea = () => {
                 toast.error(err || 'Failed to create post')
             }
         }
+
+    const isDisabled = isPosting || (content.trim().length === 0 && selectedFiles.length === 0)
     return <div className="border border-border rounded-xl p-4 shadow-sm bg-card transition-all">
                         <TextareaAutosize
                             placeholder="Share your thoughts..."
@@ -124,8 +126,8 @@ const CreatePostArea = () => {
                         </div>
                                             
                         {/* Footer Actions */}
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                            <div className="flex items-center gap-3">
+                        <div className="flex items-center flex-wrap gap-4 justify-between mt-4 pt-3 border-t border-border">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 <input 
                                     type="file" 
                                     multiple 
@@ -149,13 +151,14 @@ const CreatePostArea = () => {
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-4 flex-wrap">
                                 <span className={`text-xs font-mono ${content.length > 1000 && 'text-red-500'}`}>
                                     {content.length}/1000   
                                 </span>
                                 <Button 
                                     onClick={handlePostSubmit}
-                                    disabled={isPosting || isLoading || (!content.trim() && selectedFiles.length === 0) || content.length > 1000}
+                                    className={`h-8 py-0 px-3 text-xs gap-1.5 ${isDisabled && 'opacity-50'}`}
+                                    disabled={isDisabled}
                                     variant="PRIMARY" 
                                 >
                                     {isPosting ? (

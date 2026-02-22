@@ -21,15 +21,15 @@ const Header = ({ user, onLogout }) => {
     }, [])
 
     return (
-        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-6 md:px-20 py-3 flex items-center justify-between">
+        <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-3 md:px-10 py-3 flex items-center justify-between">
             
             
             <div className="flex items-center gap-6">
                 <Link href="/feed" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="bg-primary p-1.5 rounded-lg">
-                        <Code2 className="text-primary-foreground" size={20}/>
+                        <Code2 className="text-primary-foreground" size={14}/>
                     </div>
-                    <h3 className="text-xl font-bold hidden sm:block">
+                    <h3 className="text-xl font-bold text-xs sm:text-base">
                         Codify<span className="text-primary">Dev</span> 
                     </h3>
                 </Link>
@@ -41,14 +41,14 @@ const Header = ({ user, onLogout }) => {
             </div>
 
             <div className="flex items-center gap-3">
-                <Button variant="outline" className="!p-2 sm:flex">
-                    <Bell size={18}/>
+                <Button variant="outline" className="!p-2 sm:flex ">
+                    <Bell size={14}/>
                 </Button>
 
                 <div className="relative" ref={dropdownRef}>
                     <button 
                         onClick={() => setIsOpen(!isOpen)}
-                        className="size-10 rounded-full cursor-pointer relative overflow-hidden flex justify-center items-center border border-border p-2"
+                        className="size-8 rounded-full cursor-pointer relative overflow-hidden flex justify-center items-center border border-border p-2"
                     >
                         {user?.avatar ? (
                             <Image 

@@ -199,22 +199,22 @@ const PostCard = ({ post, isExpandedText }) => {
             </div>
 
             {/* Content Text Section */}
-            <div className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+            <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
                 {displayedContent}
                 {isLongPost && !isExpanded && (
                     <span 
-                        className="text-primary hover:underline font-semibold cursor-pointer ml-1" 
+                        className="text-primary hover:underline font-semibold cursor-pointer ml-1 text-xs" 
                         onClick={() => setIsExpanded(true)}
                     >
-                        ...Show more
+                        ...show more
                     </span>
                 )}
                 {isExpanded && isLongPost && !isExpandedText && (
                     <span 
-                        className="text-primary hover:underline font-semibold cursor-pointer ml-1" 
+                        className="text-primary hover:underline font-semibold cursor-pointer ml-1 text-xs" 
                         onClick={() => setIsExpanded(false)}
                     >
-                        Show less
+                        show less
                     </span>
                 )}
             </div>

@@ -28,7 +28,7 @@ const GithubRepos = ({ username }) => {
     if (loading) return <div className="mt-8 text-center animate-pulse">Loading repositories...</div>
 
     return (
-        <div className="py-4 space-y-6">
+        <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
 
                 <div className="flex items-center gap-3">

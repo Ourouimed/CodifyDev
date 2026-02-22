@@ -1,5 +1,6 @@
 'use client'
 import Header from "@/components/Header";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import Sidebar from "@/components/Sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { logout, verifySession } from "@/store/features/auth/authSlice";
@@ -27,7 +28,9 @@ const FeedLayout = ({children})=>{
             dispatch(logout())
         }}/>
 
-        <div className="relative grid grid-cols md:grid-cols-4 gap-4 px-6 md:px-20 py-5">
+        <MobileBottomNav/>
+
+        <div className="relative grid grid-cols md:grid-cols-4 gap-4 px-3 md:px-10 py-5">
             <Sidebar/>
             <div className="md:col-span-3">
                 {children}

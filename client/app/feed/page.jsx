@@ -29,7 +29,7 @@ const FeedHomePage = () => {
                 <div className="col-span-1 md:col-span-2 space-y-6">
                     
                     {/* Navigation Tabs */}
-                    <div className="sticky top-14 bg-background/80 backdrop-blur-md z-20 flex items-center gap-2 border-b border-border pt-1">
+                    <div className="sticky top-14 bg-background z-20 flex items-center gap-2 border-b border-border pt-1">
                         {[
                             { id: 'Discover', label: 'For You', icon: Compass },
                             { id: 'Following', label: 'Following', icon: Users }
@@ -94,11 +94,10 @@ const FeedHomePage = () => {
                     </div>
                 </div>
 
-                {/* Optional Right Sidebar (for Suggestions/Trends) */}
+                {/* Right Sidebar */}
                 <div className="hidden md:block col-span-1">
                     <div className="sticky top-20 space-y-6">
-                        {/* Placeholder for future widgets */}
-                        <div className="p-5 rounded-2xl border border-border bg-card">
+                        <div className="p-5 rounded-2xl border border-border">
                             <h4 className="font-bold mb-3">Who to follow</h4>
                             <p className="text-xs text-muted-foreground">Suggestions will appear here based on your tech stack.</p>
                         </div>

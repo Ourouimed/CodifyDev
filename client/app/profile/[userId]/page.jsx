@@ -78,7 +78,7 @@ const ProfilePage = () => {
                     setProfile={setProfile}
                 />
 
-                {/* --- Tab Switcher --- */}
+                {/* Tab Switcher */}
                 <div className="flex border-b border-border mt-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
                     <button
                         onClick={() => setActiveTab('repos')}
@@ -106,17 +106,16 @@ const ProfilePage = () => {
                     </button>
                 </div>
 
-                {/* --- Tab Content Container --- */}
-                {/* Using max-w-2xl here prevents posts from stretching too wide on large screens */}
+                {/*Tab Content Container */}
                 <div className="mt-6 flex justify-center">
-                    <div className="w-full max-w-2xl">
+                    <div className="w-full max-w-2xl md:max-w-full">
                         {activeTab === 'repos' ? (
                             profile.githubUsername ? (
                                 <div className="animate-in fade-in duration-300">
                                     <GithubRepos username={profile.githubUsername} />
                                 </div>
                             ) : (
-                                <div className="p-10 flex flex-col gap-5 rounded-2xl border border-border items-center justify-center text-center bg-card/50">
+                                <div className="p-10 flex flex-col gap-5 rounded-2xl border border-border items-center justify-center text-center">
                                     <div className="bg-foreground text-background p-4 rounded-full shadow-md">
                                         <Github className="w-8 h-8" />
                                     </div>
