@@ -13,6 +13,11 @@ const getAll = async ()=>{
     return response.data
 }
 
+const getFollowingPosts = async ()=>{
+    const response = await axiosService.get('/api/posts/following')
+    return response.data
+}
+
 
 const likePost = async (postId) => {
     const response = await axiosService.post(`/api/posts/like/${postId}`)
@@ -23,5 +28,10 @@ const getSinglePost = async (postId) => {
     const response = await axiosService.get(`/api/posts/post/${postId}`);
     return response.data; 
 };
-const postService = {createPost , getAll , likePost, getSinglePost}
+
+const getPostsByAuthor = async (authorId) => {
+    const response = await axiosService.get(`/api/posts/author/${authorId}`);
+    return response.data; 
+};
+const postService = {createPost , getAll , likePost, getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService

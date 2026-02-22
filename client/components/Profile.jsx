@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/useToast"
 import { Edit, Share, UserCheck, UserPlus } from "lucide-react"
 import { useDispatch } from "react-redux"
 import { followUnfollow } from "@/services/followUnfollow"
+import Image from "next/image"
 
 const Profile = ({user , isMyProfile , setProfile})=>{
     const { openPopup } = usePopup()
@@ -40,16 +41,17 @@ const Profile = ({user , isMyProfile , setProfile})=>{
                     <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-20 mb-4 gap-4">
                         {/* Avatar Wrapper */}
                         <div className="relative">
-                            <div className="w-32 h-32 rounded-full border-4 border-background bg-muted overflow-hidden">
+                            <div className="w-32 h-32 relative overflow-hidden rounded-full border border-border flex-shrink-0">
                                 {user?.avatar ? (
-                                    <img 
+                                    <Image
                                         src={user?.avatar} 
-                                        alt={user.name || "Profile"} 
-                                        className="w-full h-full object-cover"
+                                        alt={`${user?.username}'s avatar`}
+                                        fill
+                                        className="object-cover"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-secondary text-secondary-foreground text-3xl font-bold">
-                                        {user?.name?.charAt(0) || user?.email?.charAt(0) || "?"}
+                                    <div className="w-full h-full bg-primary flex items-center justify-center bg-secondary text-5xl font-bold">
+                                        {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0) || "?"}
                                     </div>
                                 )}
                             </div>

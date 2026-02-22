@@ -40,6 +40,26 @@ export const getAllPosts = createAsyncThunk('posts/getAll' , async (post , thunk
     }
 })
 
+
+export const getFollowingPosts = createAsyncThunk('posts/getFollowing' , async (post , thunkAPI)=>{
+    try {
+        return await postService.getFollowingPosts()
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
+
+export const getPostsByAuthor = createAsyncThunk('posts/getByAuthor' , async (authorId , thunkAPI)=>{
+    try {
+        return await postService.getPostsByAuthor(authorId)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const postSlice = createSlice({
     name : 'post',
     initialState : {
@@ -63,6 +83,18 @@ export const postSlice = createSlice({
                 }
                 post.isLiked = !post.isLiked
             }   
+        }, 
+        updateFollowStatus : (state , action) => {
+            const { username , isFollowing } = action.payload
+            state.posts = state.posts.map(post => {
+                if (post.author?.username === username){
+                    return {
+                        ...post,
+                        isFollowing
+                    }
+                }
+                return post
+            })
         }
     },
     extraReducers : builder => builder
@@ -94,6 +126,38 @@ export const postSlice = createSlice({
         state.isLoading = false
         console.log(action.payload)
     }) 
+
+
+    // get followings posts
+    .addCase(getFollowingPosts.pending , (state)=>{
+        state.isLoading = true
+    })
+    .addCase(getFollowingPosts.fulfilled , (state , action)=>{
+        state.isLoading = false
+        state.posts= action.payload.posts
+        console.log(action.payload)
+    })
+    .addCase(getFollowingPosts.rejected , (state , action)=>{
+        state.isLoading = false
+        console.log(action.payload)
+    }) 
+
+
+
+    // get posts by author
+    .addCase(getPostsByAuthor.pending , (state)=>{
+        state.isLoading = true
+    })
+    .addCase(getPostsByAuthor.fulfilled , (state , action)=>{
+        state.isLoading = false
+        state.posts= action.payload.posts
+        console.log(action.payload)
+    })
+    .addCase(getPostsByAuthor.rejected , (state , action)=>{
+        state.isLoading = false
+        console.log(action.payload)
+    }) 
+
     // get single post
     .addCase(getSinglePost.pending, (state) => {
         state.isLoading = true;
@@ -112,5 +176,5 @@ export const postSlice = createSlice({
     })   
 })
 
-export const { toggleLikePost } = postSlice.actions
+export const { toggleLikePost , updateFollowStatus } = postSlice.actions
 export default postSlice.reducer

@@ -5,15 +5,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { formatDistanceToNowStrict } from "date-fns";
-import { EllipsisVertical, Heart, UserPlus, MessageCircle, Share } from "lucide-react";
+import { EllipsisVertical, Heart, UserPlus, MessageCircle, Share, UserCheck } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useToast } from "@/hooks/useToast";
-import { likePost, toggleLikePost } from "@/store/features/posts/postSlice";
+import { likePost, toggleLikePost, updateFollowStatus } from "@/store/features/posts/postSlice";
+import { followUnfollow } from "@/services/followUnfollow";
+import { useAuth } from "@/hooks/useAuth";
 
 const PostCard = ({ post , isExpandedText }) => {
     const [isExpanded, setIsExpanded] = useState(isExpandedText || false);
     const dispatch = useDispatch();
     const toast = useToast();
+    const { user } = useAuth();
 
     // Configuration
     const CHAR_LIMIT = 200;
@@ -48,18 +51,33 @@ const PostCard = ({ post , isExpandedText }) => {
             .catch(() => toast.error('Failed to copy link'));
     };
 
+    
+        const handleFollowUnfollow = async (username)=>{
+                try {
+                    const response = await followUnfollow(username)
+                    console.log(response.profile.isFollowing) 
+                    dispatch(updateFollowStatus({ username , isFollowing : response.profile.isFollowing }))
+                    toast.success("Follow status updated")
+                } catch (error) {
+                    toast.error(error || "Failed to update follow status")
+                }
+        }
+
     return (
         <div className="p-4 rounded-xl border border-border space-y-3 bg-card transition-all hover:shadow-sm">
             <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                    <div className="relative w-10 h-10 overflow-hidden rounded-full bg-muted border border-border flex-shrink-0">
-                        <Image
-                            src={post.author?.avatar || "/default-avatar.png"} 
-                            alt={`${post.author?.username}'s avatar`}
-                            fill
-                            sizes="40px"
-                            className="object-cover"
-                        />                 
+                    <div className="relative w-10 h-10 overflow-hidden rounded-full border border-border flex-shrink-0">
+                        {post.author?.avatar ? 
+                            <Image
+                                src={post.author?.avatar} 
+                                alt={`${post.author?.username}'s avatar`}
+                                fill
+                                className="object-cover"
+                            />   : 
+                            <div className="w-full h-full bg-primary flex items-center justify-center bg-secondary font-bold">
+                                        {post.author?.displayName?.charAt(0).toUpperCase() || "?"}
+                                    </div>}              
                     </div>
                     <div className="flex flex-col">
                         <Link href={`/profile/${post.author?.username}`}>
@@ -74,10 +92,10 @@ const PostCard = ({ post , isExpandedText }) => {
                 </div>
 
                 <div className="flex items-center gap-1">
-                    <Button variant='outline' className="h-8 py-0 px-3 text-xs gap-1.5">
-                        Follow
-                        <UserPlus className="w-3.5 h-3.5"/>
-                    </Button>
+                    {post.author?.username !== user?.username && <Button variant='outline' className="h-8 py-0 px-3 text-xs gap-1.5" onClick={() => handleFollowUnfollow(post.author?.username)}>
+                        {post.isFollowing ? 'Unfollow' : 'Follow'}
+                        {post.isFollowing ? <UserCheck className="w-3.5 h-3.5"/> : <UserPlus className="w-3.5 h-3.5"/>}
+                    </Button>}
                     <button className="p-1 hover:bg-muted rounded-full transition-colors text-muted-foreground">
                         <EllipsisVertical className="w-4 h-4"/>
                     </button>
@@ -93,7 +111,7 @@ const PostCard = ({ post , isExpandedText }) => {
                 )}
 
 
-                {isExpanded && isLongPost && (
+                {isExpanded && isLongPost && !isExpandedText && (
                     <span className="text-primary hover:underline font-semibold cursor-pointer ml-1" onClick={() => setIsExpanded(false)}>
                         Show less
                     </span>

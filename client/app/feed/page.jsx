@@ -1,13 +1,12 @@
 'use client'
-
 import { useEffect, useState } from "react"
 import FeedLayout from "../FeedLayout"
 import { Button } from "@/components/ui/Button"
-import { TextArea } from "@/components/ui/TextArea"
+import TextareaAutosize from 'react-textarea-autosize';
 import { useDispatch } from "react-redux"
-import { Link, Loader2, Paperclip, Vote } from "lucide-react"
+import { Link, Loader2, Paperclip, Send, Vote } from "lucide-react"
 import { useToast } from "@/hooks/useToast"
-import { createPost, getAllPosts } from "@/store/features/posts/postSlice"
+import { createPost, getAllPosts, getFollowingPosts } from "@/store/features/posts/postSlice"
 import { usePosts } from "@/hooks/usePosts"
 import PostCard from "@/components/cards/PostCard"
 
@@ -22,7 +21,10 @@ const FeedHomePage = () => {
       if (feedType === 'Discover'){
         dispatch(getAllPosts())
       }
-    } , [dispatch , feedType])
+      if (feedType === 'Following'){
+        dispatch(getFollowingPosts())
+      }
+    } , [dispatch , feedType , posts.length])
 
     const handlePostSubmit = async () => {
         if (!content.trim()) return
@@ -46,15 +48,18 @@ const FeedHomePage = () => {
                     
                     
                     <div className="border border-border rounded-xl p-4 shadow-sm transition-all">
-                        <TextArea 
-                            placeholder="Share your thoughts..." 
+                        <TextareaAutosize
+                            placeholder="Share your thoughts..."
+                            minRows={3} 
+                            maxRows={10} 
+                            className="w-full outline-none resize-none bg-transparent"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                        />
-                        
+                            />
+                                                    
                         <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
                             {/* Action Icons */}
-                            <div className="flex items-center gap-3 text-muted-foreground">
+                            <div className="flex items-center gap-3">
                                 <button className="hover:text-primary transition-colors">
                                     <Paperclip size={20} />
                                 </button>
@@ -67,17 +72,18 @@ const FeedHomePage = () => {
                             </div>
 
                             <div className="flex items-center gap-3">
-                                <span className={`text-xs ${content.length > 250 && 'text-red-500'}`}>
-                                    {content.length}/250
+                                <span className={`text-xs ${content.length > 1000 && 'text-red-500'}`}>
+                                    {content.length}/1000   
                                 </span>
                                 <Button 
                                     onClick={handlePostSubmit}
-                                    disabled={!content.trim()}
-                                    className={content.length === 0 ? 'opacity-70' : 'opacity-100'}
+                                    disabled={!content.trim() || content.length > 1000}
+                                    className={content.length === 0 || content.length > 1000 ? 'opacity-60' : 'opacity-100'}
                                     variant="PRIMARY" 
                                 >
                                     {isLoading && <Loader2 className={isLoading && 'animate-spin'}/>}
-                                    {isLoading ? 'Posting...' : 'Post'}
+                                    {isLoading ? 'Posting...' : 'Post'} 
+                                    <Send className="w-3.5 h-3.5 ml-1"/>
                                 </Button>
                             </div>
                         </div>
