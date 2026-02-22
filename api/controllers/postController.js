@@ -1,4 +1,5 @@
 import Post from "../models/Post.js"
+import User from "../models/User.js"
 
 const createPost = async (req , res)=>{
     try {
@@ -28,7 +29,7 @@ const createPost = async (req , res)=>{
 const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find()
-            .populate('author', 'username avatar displayName') 
+            .populate('author', 'username avatar displayName followers') 
             .populate('comments.author', 'username')
             .sort({ createdAt: -1 }).
             lean();
@@ -39,7 +40,71 @@ const getAllPosts = async (req, res) => {
                 isLiked: req.user?.id 
                     ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
                     : false,
-                likeCount: post.likes.length
+                likeCount: post.likes.length , 
+                isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
+            };
+        });
+        return res.status(200).json({posts : processedPosts});
+        
+    } catch (err) {
+        console.error("Error fetching posts:", err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+};
+
+
+
+
+
+
+const getFollowingPosts = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('following').lean();
+        const posts = await Post.find({ author: { $in: user.following } })
+            .populate('author', 'username avatar displayName followers') 
+            .populate('comments.author', 'username')
+            .sort({ createdAt: -1 }).
+            lean();
+        const processedPosts = posts.map(post => {
+            return {
+                ...post,
+                isLiked: req.user?.id 
+                    ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
+                    : false,
+                likeCount: post.likes.length , 
+                isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
+            };
+        });
+        return res.status(200).json({posts : processedPosts});
+        
+    } catch (err) {
+        console.error("Error fetching posts:", err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+};
+
+
+const getPostsByAuthor = async (req, res) => {
+    try {
+        const { username } = req.params
+        const author = await User.findOne({username}).select('_id')
+        const posts = await Post.find({ author: author._id })
+            .populate('author', 'username avatar displayName followers') 
+            .populate('comments.author', 'username')
+            .sort({ createdAt: -1 }).
+            lean();
+        const processedPosts = posts.map(post => {
+            return {
+                ...post,
+                isLiked: req.user?.id 
+                    ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
+                    : false,
+                likeCount: post.likes.length , 
+                isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
             };
         });
         return res.status(200).json({posts : processedPosts});
@@ -108,4 +173,4 @@ const likePost = async (req, res) => {
         });
     }   
 }
-export { createPost , getAllPosts , getPostById , likePost }
+export { createPost , getAllPosts , getPostById , likePost , getFollowingPosts , getPostsByAuthor}

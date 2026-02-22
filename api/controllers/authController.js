@@ -81,8 +81,12 @@ const login = async (req, res) => {
                 bio : doc.bio || "",
                 banner : doc.banner || null ,
                 username : doc.username ,
-                avatar : doc.avatar || null ,
-                createdAt : doc.createdAt , updatedAt : doc.updatedAt
+                avatar : doc.avatar || null , 
+                followers : doc.followers ,
+                following : doc.following ,
+                createdAt : doc.createdAt , updatedAt : doc.updatedAt ,
+                ...(doc.githubUsername && { githubUsername: doc.githubUsername }),
+                ...(doc.googleId && { googleId: doc.googleId })
             }})
     }
 
@@ -106,7 +110,9 @@ const verifySession = async (req, res) => {
                 bio : docUser.bio || "",
                 banner : docUser.banner || null ,
                 username : docUser.username ,
-                avatar : docUser.avatar || null ,
+                avatar : docUser.avatar || null , 
+                followers : docUser.followers ,
+                following : docUser.following ,
                 createdAt : docUser.createdAt , updatedAt : docUser.updatedAt ,
                 ...(docUser.githubUsername && { githubUsername: docUser.githubUsername }),
                 ...(docUser.googleId && { googleId: docUser.googleId }),
@@ -220,6 +226,9 @@ const updateProfile = async (req , res)=>{
                 banner : updatedUser.banner || null , 
                 username : updatedUser.username ,
                 avatar : updatedUser.avatar || null ,
+                followers : updatedUser.followers ,
+                following : updatedUser.following ,
+                isFollowing : req.user?.id ? updatedUser.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
                 createdAt : updatedUser.createdAt , updatedAt : updatedUser.updatedAt , 
                 ...(updatedUser.githubUsername && { githubUsername: updatedUser.githubUsername }),
                 ...(updatedUser.googleId && { googleId: updatedUser.googleId }),
