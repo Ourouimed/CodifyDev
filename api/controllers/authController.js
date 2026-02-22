@@ -192,7 +192,7 @@ const authCallback = (req, res) => {
 
 const updateProfile = async (req , res)=>{
     try {
-        const { name , username , bio , avatar} = req.body
+        const { name , username} = req.body
         const avatarFile = req.files?.['avatar']?.[0];
         const bannerFile = req.files?.['banner']?.[0];
 

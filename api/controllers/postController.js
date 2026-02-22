@@ -1,30 +1,60 @@
+import { uploadImage } from "../lib/upload-image.js"
 import Post from "../models/Post.js"
 import User from "../models/User.js"
 
-const createPost = async (req , res)=>{
+const createPost = async (req, res) => {
     try {
-        const userId = req.user.id
-        const { content } = req.body
+        const userId = req.user.id;
+        const { content } = req.body;
+        
+        // 1. Get files from Multer
+        const files = req.files || [];
 
-        if (!content){
-            return res.status(400).json({error : 'Some required fields are missing!'})
+        // 2. Validations
+        if (!content && files.length === 0) {
+            return res.status(400).json({ error: 'Post must have text or an image!' });
         }
 
+        if (files.length > 10) {
+            return res.status(400).json({ error: 'You can upload a maximum of 10 images' });
+        }
 
+        // Check file sizes
+        for (const file of files) {
+            if (file.size > 5 * 1024 * 1024) {
+                return res.status(400).json({ error: `Image ${file.originalname} exceeds the 5MB size limit` });
+            }
+        }
+
+        // 3. Upload Images and collect URLs
+        const uploadPromises = files.map((file, index) => {
+            const fileName = `post-images/${userId}/${Date.now()}-${index}.jpg`;
+            return uploadImage(file.buffer, fileName);
+        });
+
+        const imageUrls = await Promise.all(uploadPromises);
+
+        // 4. Create Post with the image URLs
         const post = await Post.create({
-            content , 
-            author : userId
-        })
+            content,
+            author: userId,
+            images: imageUrls 
+        });
 
-        return res.json({message : 'Post created successfully' , post })
-    }
-    catch (err){
-        console.log(err)
+
+
+        return res.json({ 
+            message: 'Post created successfully', 
+            post 
+        });
+
+    } catch (err) {
+        console.error("Create Post Error:", err);
         return res.status(500).json({
-            error : 'Internal server error'
-        })
+            error: 'Internal server error'
+        });
     }
-}
+};
 
 const getAllPosts = async (req, res) => {
     try {
