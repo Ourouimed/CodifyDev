@@ -64,6 +64,7 @@ export const postSlice = createSlice({
     name : 'post',
     initialState : {
         isLoading : false ,
+        isPosting : false ,
         posts : []
     },
 
@@ -100,15 +101,15 @@ export const postSlice = createSlice({
     extraReducers : builder => builder
     // create post 
     .addCase(createPost.pending , (state)=>{
-        state.isLoading = true
+        state.isPosting = true
     })
     .addCase(createPost.fulfilled , (state , action)=>{
-        state.isLoading = false
+        state.isPosting = false
         state.posts.push(action.payload.post)
         console.log(action.payload)
     })
     .addCase(createPost.rejected , (state , action)=>{
-        state.isLoading = false
+        state.isPosting = false
         console.log(action.payload)
     })
 

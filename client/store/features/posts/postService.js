@@ -1,9 +1,9 @@
 import axiosService from "@/lib/axiosService"
 
-const createPost = async (content) => {
-    const respone = await axiosService.post(`/api/posts/create` , {
-        content
-    })
+const createPost = async (data) => {
+    const respone = await axiosService.post(`/api/posts/create` , data , {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
     return respone.data
 }
 

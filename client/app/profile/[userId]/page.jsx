@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import FeedLayout from "../../FeedLayout"
 import Profile from "@/components/Profile"
 import GithubRepos from "@/components/GithubRepos"
-import { Github, AlertCircle, Loader2, BookText, Code2 } from "lucide-react" // Added icons
+import { Github, AlertCircle, Loader2, BookText, Code2 } from "lucide-react"
 import { GithubAuthBtn } from "@/components/ui/GithubAuthBtn"
 import { useToast } from "@/hooks/useToast"
 import { getProfile } from "@/services/getProfile"
@@ -16,9 +16,10 @@ const ProfilePage = () => {
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('repos') 
     const { userId } = useParams()
-    const { user } = useAuth()
+    const { user: currentUser } = useAuth()
 
     const toast = useToast()
+    const isMyProfile = currentUser?.username === userId
 
     useEffect(() => {
         const fetchData = async () => {
@@ -37,6 +38,7 @@ const ProfilePage = () => {
         fetchData()
     }, [userId]) 
 
+    // --- Loading State ---
     if (loading) {
         return (
             <FeedLayout>
@@ -50,6 +52,7 @@ const ProfilePage = () => {
         )
     }
 
+    // --- Error State ---
     if (!profile) {
         return (
             <FeedLayout>
@@ -66,15 +69,21 @@ const ProfilePage = () => {
 
     return (
         <FeedLayout>
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Profile user={profile} isMyProfile={user?.username === userId} setProfile={setProfile}/>
+            <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+                
+                {/* Profile Header */}
+                <Profile 
+                    user={profile} 
+                    isMyProfile={isMyProfile} 
+                    setProfile={setProfile}
+                />
 
                 {/* --- Tab Switcher --- */}
-                <div className="flex border-b border-border mt-6">
+                <div className="flex border-b border-border mt-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
                     <button
                         onClick={() => setActiveTab('repos')}
-                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors relative ${
-                            activeTab === 'repos' && 'text-primary'
+                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
+                            activeTab === 'repos' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <Code2 className="w-4 h-4" />
@@ -85,8 +94,8 @@ const ProfilePage = () => {
                     </button>
                     <button
                         onClick={() => setActiveTab('posts')}
-                        className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors relative ${
-                            activeTab === 'posts' && 'text-primary'
+                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
+                            activeTab === 'posts' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                         <BookText className="w-4 h-4" />
@@ -97,26 +106,39 @@ const ProfilePage = () => {
                     </button>
                 </div>
 
-                {/* --- Tab Content --- */}
-                <div className="mt-6">
-                    {activeTab === 'repos' ? (
-                        profile.githubUsername ? (
-                            <GithubRepos username={profile.githubUsername} />
+                {/* --- Tab Content Container --- */}
+                {/* Using max-w-2xl here prevents posts from stretching too wide on large screens */}
+                <div className="mt-6 flex justify-center">
+                    <div className="w-full max-w-2xl">
+                        {activeTab === 'repos' ? (
+                            profile.githubUsername ? (
+                                <div className="animate-in fade-in duration-300">
+                                    <GithubRepos username={profile.githubUsername} />
+                                </div>
+                            ) : (
+                                <div className="p-10 flex flex-col gap-5 rounded-2xl border border-border items-center justify-center text-center bg-card/50">
+                                    <div className="bg-foreground text-background p-4 rounded-full shadow-md">
+                                        <Github className="w-8 h-8" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <h4 className="font-bold text-xl">
+                                            {isMyProfile ? "Link your GitHub" : "No GitHub Linked"}
+                                        </h4>
+                                        <p className="text-sm text-muted-foreground max-w-[280px] mx-auto">
+                                            {isMyProfile 
+                                                ? "Showcase your coding skills by displaying your public repositories."
+                                                : "This user hasn't connected their GitHub account yet."}
+                                        </p>
+                                    </div>
+                                    {isMyProfile && <GithubAuthBtn />}
+                                </div>
+                            )
                         ) : (
-                            <div className="p-10 flex flex-col gap-5 rounded-2xl border border-border items-center justify-center text-center transition-colors">
-                                <div className="bg-foreground text-background p-4 rounded-full shadow-md">
-                                    <Github className="w-8 h-8" />
-                                </div>
-                                <div className="space-y-2">
-                                    <h4 className="font-bold text-xl">Link your GitHub</h4>
-                                    <p className="text-sm text-muted-foreground max-w-[280px] mx-auto">
-                                        Showcase your coding skills by displaying your public repositories.
-                                    </p>
-                                </div>
-                                <GithubAuthBtn />
+                            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                <ProfilePosts username={profile.username} />
                             </div>
-                        )
-                    ) : <ProfilePosts username={profile.username} />}
+                        )}
+                    </div>
                 </div>
             </div>
         </FeedLayout>

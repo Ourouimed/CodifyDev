@@ -1,133 +1,109 @@
 'use client'
 import { useEffect, useState } from "react"
 import FeedLayout from "../FeedLayout"
-import { Button } from "@/components/ui/Button"
-import TextareaAutosize from 'react-textarea-autosize';
 import { useDispatch } from "react-redux"
-import { Link, Loader2, Paperclip, Send, Vote } from "lucide-react"
-import { useToast } from "@/hooks/useToast"
-import { createPost, getAllPosts, getFollowingPosts } from "@/store/features/posts/postSlice"
+import { Loader2, Compass, Users, Sparkles } from "lucide-react" 
+import { getAllPosts, getFollowingPosts } from "@/store/features/posts/postSlice"
 import { usePosts } from "@/hooks/usePosts"
 import PostCard from "@/components/cards/PostCard"
+import CreatePostArea from "@/components/CreatePostArea";
 
 const FeedHomePage = () => {
     const [feedType, setFeedType] = useState('Discover')
-    const [content, setContent] = useState('')
-    const { isLoading , posts} = usePosts()
+    const { isLoading, posts } = usePosts()
     const dispatch = useDispatch()
-    const toast = useToast()
 
-    useEffect(()=>{
-      if (feedType === 'Discover'){
-        dispatch(getAllPosts())
-      }
-      if (feedType === 'Following'){
-        dispatch(getFollowingPosts())
-      }
-    } , [dispatch , feedType , posts.length])
-
-    const handlePostSubmit = async () => {
-        if (!content.trim()) return
-        try {
-            await dispatch(createPost(content)).unwrap()
-            toast.success('Post created successfully')
-            setContent('')
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        if (feedType === 'Discover') {
+            dispatch(getAllPosts())
+        } else {
+            dispatch(getFollowingPosts())
         }
-        catch (err){
-            toast.error(err || 'Error')
-        }
-    } 
-
-
-
+    }, [dispatch, feedType])
 
     return (
         <FeedLayout>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="col-span-2 space-y-6">
+                <div className="col-span-1 md:col-span-2 space-y-6">
                     
-                    
-                    <div className="border border-border rounded-xl p-4 shadow-sm transition-all">
-                        <TextareaAutosize
-                            placeholder="Share your thoughts..."
-                            minRows={3} 
-                            maxRows={10} 
-                            className="w-full outline-none resize-none bg-transparent"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            />
-                                                    
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-                            {/* Action Icons */}
-                            <div className="flex items-center gap-3">
-                                <button className="hover:text-primary transition-colors">
-                                    <Paperclip size={20} />
-                                </button>
-                                <button className="hover:text-primary transition-colors">
-                                    <Link size={20} />
-                                </button>
-                                <button className="hover:text-primary transition-colors">
-                                    <Vote size={20} />
-                                </button>
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                                <span className={`text-xs ${content.length > 1000 && 'text-red-500'}`}>
-                                    {content.length}/1000   
-                                </span>
-                                <Button 
-                                    onClick={handlePostSubmit}
-                                    disabled={!content.trim() || content.length > 1000}
-                                    className={content.length === 0 || content.length > 1000 ? 'opacity-60' : 'opacity-100'}
-                                    variant="PRIMARY" 
+                    {/* Navigation Tabs */}
+                    <div className="sticky top-14 bg-background/80 backdrop-blur-md z-20 flex items-center gap-2 border-b border-border pt-1">
+                        {[
+                            { id: 'Discover', label: 'For You', icon: Compass },
+                            { id: 'Following', label: 'Following', icon: Users }
+                        ].map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = feedType === tab.id;
+                            return (
+                                <button 
+                                    key={tab.id}
+                                    onClick={() => setFeedType(tab.id)}
+                                    className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-all relative cursor-pointer group ${
+                                        isActive && 'text-primary'
+                                    }`}
                                 >
-                                    {isLoading && <Loader2 className={isLoading && 'animate-spin'}/>}
-                                    {isLoading ? 'Posting...' : 'Post'} 
-                                    <Send className="w-3.5 h-3.5 ml-1"/>
-                                </Button>
-                            </div>
-                        </div>
+                                    <Icon className={`w-4 h-4 transition-transform ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                    {tab.label}
+                                    {isActive && (
+                                        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary animate-in fade-in zoom-in duration-300" />
+                                    )}
+                                </button>
+                            )
+                        })}
                     </div>
 
-                    {/* Feed Tabs with subtle underline style */}
-                    <div className="flex items-center border-b border-border">
-                        <button 
-                            onClick={() => setFeedType('Discover')}
-                            className={`px-4 py-3 text-sm font-medium transition-colors relative cursor-pointer  ${
-                                feedType === 'Discover' && 'text-primary'
-                            }`}
-                        >
-                            Discover
-                            {feedType === 'Discover' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />}
-                        </button>
-                        <button 
-                            onClick={() => setFeedType('Following')}
-                            className={`px-4 py-3 text-sm font-medium transition-colors relative cursor-pointer ${
-                                feedType === 'Following' && 'text-primary'
-                            }`}
-                        >
-                            Following
-                            {feedType === 'Following' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />}
-                        </button>
-                    </div>
+                    {/* Create Post Area */}
+                    <CreatePostArea />
 
-                  
+                    {/* Posts List */}
                     <div className="space-y-4">
                         {isLoading && posts.length === 0 ? (
-                        <div className="flex justify-center p-10">
-                            <Loader2 className="animate-spin text-primary" size={40} />
-                        </div>
+                            // Loading Skeleton State
+                            <div className="space-y-4">
+                                {[1, 2, 3].map((i) => (
+                                    <div key={i} className="w-full h-64 bg-muted animate-pulse rounded-xl border border-border" />
+                                ))}
+                                <div className="flex flex-col items-center justify-center p-10 gap-3">
+                                    <Loader2 className="animate-spin text-primary/50" size={32} />
+                                    <p className="text-sm text-muted-foreground">Curating your feed...</p>
+                                </div>
+                            </div>
                         ) : posts.length > 0 ? (
-                            posts.map((post) => <PostCard key={post._id} post={post} />)
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+                                {posts.map((post) => (
+                                    <PostCard key={post._id} post={post} />
+                                ))}
+                            </div>
                         ) : (
-                            <div className="text-center p-10 text-muted-foreground">
-                                No posts found in Discover. Be the first to post!
+                            <div className="flex flex-col items-center justify-center text-center p-16 space-y-4 bg-card/50 rounded-2xl border border-dashed border-border transition-all">
+                                <div className="p-4 bg-primary/10 rounded-full">
+                                    <Sparkles className="w-8 h-8 text-primary" />
+                                </div>
+                                <div className="space-y-1">
+                                    <h3 className="text-lg font-bold">Nothing to see in {feedType}</h3>
+                                    <p className="text-muted-foreground max-w-[250px] mx-auto text-sm">
+                                        {feedType === 'Discover' 
+                                            ? "Looks like the world is quiet today. Why not start the conversation?"
+                                            : "Follow some developers to see what they're building!"}
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
 
-    
+                {/* Optional Right Sidebar (for Suggestions/Trends) */}
+                <div className="hidden md:block col-span-1">
+                    <div className="sticky top-20 space-y-6">
+                        {/* Placeholder for future widgets */}
+                        <div className="p-5 rounded-2xl border border-border bg-card">
+                            <h4 className="font-bold mb-3">Who to follow</h4>
+                            <p className="text-xs text-muted-foreground">Suggestions will appear here based on your tech stack.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </FeedLayout>
     )
