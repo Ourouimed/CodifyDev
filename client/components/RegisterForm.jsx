@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux"
 import { useAuth } from "@/hooks/useAuth";
 import { GithubAuthBtn } from "./ui/GithubAuthBtn";
 import { GoogleAuthBtn } from "./ui/GoogleAuthBtn";
+import { useToast } from "@/hooks/useToast";
 
 const RegisterForm = ({onRegisterSuccess}) => {
     const [registerForm, setRegisterForm] = useState({
@@ -22,6 +23,7 @@ const RegisterForm = ({onRegisterSuccess}) => {
     const [errors, setErrors] = useState({});
 
     const dispatch = useDispatch();
+    const toast = useToast()
     const { isLoading } = useAuth()
 
     const validateForm = () => {
@@ -57,6 +59,7 @@ const RegisterForm = ({onRegisterSuccess}) => {
                 onRegisterSuccess()
             } catch (err) {
                console.log(err)
+               toast.error(err || 'An error occured')
             }
         }
     };

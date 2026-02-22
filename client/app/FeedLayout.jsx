@@ -29,7 +29,7 @@ const FeedLayout = ({children})=>{
 
         <div className="relative grid grid-cols md:grid-cols-4 gap-4 px-6 md:px-20 py-5">
             <Sidebar/>
-            <div className="md:col-span-3 h-[3000px]">
+            <div className="md:col-span-3">
                 {children}
             </div>
         </div>

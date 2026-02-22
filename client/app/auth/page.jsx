@@ -14,7 +14,7 @@ const Auth = ()=>{
     const [authMode , setAuthMode] = useState('login')
     const dispatch = useDispatch()
     const router = useRouter()
-    const { user , isInitialized } = useAuth() 
+    const { user , isInitialized } = useAuth()
 
       useEffect(() => {
         dispatch(verifySession());
