@@ -10,8 +10,8 @@ import { Button } from "../ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { likePost, toggleLikePost } from "@/store/features/posts/postSlice";
 
-const PostCard = ({ post }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+const PostCard = ({ post , isExpandedText }) => {
+    const [isExpanded, setIsExpanded] = useState(isExpandedText || false);
     const dispatch = useDispatch();
     const toast = useToast();
 
@@ -84,17 +84,19 @@ const PostCard = ({ post }) => {
                 </div>
             </div>
 
-            <div className="text-[15px] leading-relaxed break-words">
+            <div className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
                 {displayedContent}
-                {isLongPost && !isExpanded && "..."}
-                
-                {isLongPost && (
-                    <button 
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="ml-1 text-primary hover:underline font-semibold text-sm cursor-pointer"
-                    >
-                        {isExpanded ? "Show less" : "Show more"}
-                    </button>
+                {post.content.length > CHAR_LIMIT && !isExpanded && (
+                    <span className="text-primary hover:underline font-semibold cursor-pointer ml-1" onClick={() => setIsExpanded(true)}>
+                        ...Show more
+                    </span>
+                )}
+
+
+                {isExpanded && isLongPost && (
+                    <span className="text-primary hover:underline font-semibold cursor-pointer ml-1" onClick={() => setIsExpanded(false)}>
+                        Show less
+                    </span>
                 )}
             </div>
 

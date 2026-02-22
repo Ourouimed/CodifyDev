@@ -27,7 +27,7 @@ const PostPage = () => {
                         <Loader2 className="animate-spin h-8 w-8 text-primary"/>
                     </div>
                 ) : post ? (
-                    <PostCard post={post} />
+                    <PostCard post={post} isExpandedText={true}/>
                 ) : (
                     <div className="text-center py-10 text-muted-foreground">
                         Post not found.

@@ -8,20 +8,22 @@ import { Github, AlertCircle, Loader2 } from "lucide-react"
 import { GithubAuthBtn } from "@/components/ui/GithubAuthBtn"
 import { useToast } from "@/hooks/useToast"
 import { getProfile } from "@/services/getProfile"
+import { useAuth } from "@/hooks/useAuth"
 
 const ProfilePage = () => {
     const [profile, setProfile] = useState(null)
     const [loading, setLoading] = useState(true)
     const { userId } = useParams()
-    const toast = useToast()
+    const { user } = useAuth()
 
+    const toast = useToast()
     useEffect(() => {
         const fetchData = async () => {
             if (!userId) return
             try {
                 setLoading(true)
                 const data = await getProfile(userId) 
-                setProfile(data)
+                setProfile(data.profile) 
             } catch (err) {
                 console.error(err)
                 toast.error(err.message || 'Error fetching profile')
@@ -31,6 +33,8 @@ const ProfilePage = () => {
         }
         fetchData()
     }, [])
+
+
 
     if (loading) {
         return (
@@ -45,7 +49,7 @@ const ProfilePage = () => {
         )
     }
 
-    if (!profile?.profile) {
+    if (!profile) {
         return (
             <FeedLayout>
                 <div className="flex flex-col items-center justify-center pt-20 text-center space-y-3">
@@ -62,12 +66,12 @@ const ProfilePage = () => {
     return (
         <FeedLayout>
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Profile user={profile?.profile} />
+                <Profile user={profile} isMyProfile={user?.username === userId} setProfile={setProfile}/>
 
                 <div className="mt-4">
-                    {profile.profile?.githubUsername ? (
+                    {profile.githubUsername ? (
                             
-                            <GithubRepos username={profile.profile.githubUsername} />
+                            <GithubRepos username={profile.githubUsername} />
                     ) : (
                         <div className="p-10 mt-4 flex flex-col gap-5 rounded-2xl border border-border items-center justify-center text-center transition-colors">
                             <div className="bg-foreground text-background p-4 rounded-full shadow-md">

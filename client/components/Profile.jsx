@@ -1,11 +1,34 @@
 import { usePopup } from "@/hooks/usePopup"
 import { Button } from "./ui/Button"
+import { useToast } from "@/hooks/useToast"
+import { Edit, Share, UserCheck, UserPlus } from "lucide-react"
+import { useDispatch } from "react-redux"
+import { followUnfollow } from "@/services/followUnfollow"
 
-const Profile = ({user})=>{
+const Profile = ({user , isMyProfile , setProfile})=>{
     const { openPopup } = usePopup()
+    const toast = useToast()
     const handleOpenUpdateProfilePopup = ()=>{
             openPopup({title : 'Test' , component : 'UpdateProfile' , props : {profile : user}})
     }
+
+
+    const handleFollowUnfollow = async ()=>{
+        try {
+            const response = await followUnfollow(user.username)
+            setProfile(response.profile)
+            toast.success("Follow status updated")
+        } catch (error) {
+            toast.error(error || "Failed to update follow status")
+        }
+    }
+
+    const handleShare = () => {
+        const profileURL = `${window.location.origin}/profile/${user?.username}`;
+        navigator.clipboard.writeText(profileURL)
+            .then(() => toast.success('Link copied to clipboard'))
+            .catch(() => toast.error('Failed to copy link'));
+    };
     return <div className="bg-background rounded-2xl border border-border overflow-hidden">
                 {/* Cover Photo */}
                 <div className="w-full bg-primary h-48 relative">
@@ -34,8 +57,18 @@ const Profile = ({user})=>{
 
                         {/* Action Buttons */}
                         <div className="flex gap-2 pb-2">
-                            <Button variant="outline" onClick={handleOpenUpdateProfilePopup}>Edit Profile</Button>
-                            <Button size="sm">Share</Button>
+                            {isMyProfile ? 
+                                <Button variant="outline" onClick={handleOpenUpdateProfilePopup}>
+                                    <Edit className="w-3.5 h-3.5"/> Edit Profile
+                                </Button> : 
+                                <Button variant="outline" onClick={handleFollowUnfollow}>
+                                    {user.isFollowing ? 'Unfollow' : 'Follow'} 
+                                    {user.isFollowing ? 
+                                        <UserCheck className="w-3.5 h-3.5"/> : 
+                                        <UserPlus className="w-3.5 h-3.5"/>
+                                    }
+                                </Button>}
+                            <Button onClick={handleShare}>Share <Share className="w-3.5 h-3.5"/></Button>
                         </div>
                     </div>
 
@@ -49,12 +82,23 @@ const Profile = ({user})=>{
                         </p>
                     </div>
 
+                    {/* Followers / Following Stats */}
+                    <div className="mt-4 flex items-center gap-3">
+                        <div>
+                            <span className="font-semibold">{user?.followers?.length || 0}</span> Followers
+                        </div>
+                        <div>
+                            <span className="font-semibold">{user?.following?.length || 0}</span> Following
+                        </div>
+                    </div>
+
                     {/* Bio or Stats Placeholder */}
                     <div className="mt-4 pt-4 border-t border-border">
                         <p className="text-sm text-foreground/80">
                             {user?.bio || "No bio yet. Tell the world about yourself!"}
                         </p>
                     </div>
+
                 </div>
             </div>
 }

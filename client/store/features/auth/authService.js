@@ -31,5 +31,7 @@ const updateProfile = async (data)=>{
     return respone.data
 }
 
+
+
 const authService = { register , login , verifySession , logout , updateProfile}
 export default authService

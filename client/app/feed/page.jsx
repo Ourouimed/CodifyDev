@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 import FeedLayout from "../FeedLayout"
 import { Button } from "@/components/ui/Button"
 import { TextArea } from "@/components/ui/TextArea"
-import { useDispatch, useSelector } from "react-redux"
+import { useDispatch } from "react-redux"
 import { Link, Loader2, Paperclip, Vote } from "lucide-react"
 import { useToast } from "@/hooks/useToast"
 import { createPost, getAllPosts } from "@/store/features/posts/postSlice"
 import { usePosts } from "@/hooks/usePosts"
-import Image from "next/image"
 import PostCard from "@/components/cards/PostCard"
 
 const FeedHomePage = () => {
