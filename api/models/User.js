@@ -21,6 +21,14 @@ const UserSchema = new mongoose.Schema({
   githubId: { type: String, unique: true, sparse: true },
   githubUsername : { type: String, unique: true, sparse: true ,  lowercase: true},
   googleId: { type: String, unique: true, sparse: true },
+  followers : {
+    type : [{type : mongoose.Schema.Types.ObjectId , ref : 'User'}],
+    default : []
+  },
+  following : {
+    type : [{type : mongoose.Schema.Types.ObjectId , ref : 'User'}],
+    default : []
+  }
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);

@@ -141,7 +141,6 @@ const getProfile = async (req , res)=>{
             return res.status(404).json({error : 'User not found'})
         }
 
-
         return res.json({profile : {
                 name : profile.displayName , 
                 email : profile.email ,
@@ -149,6 +148,9 @@ const getProfile = async (req , res)=>{
                 banner : profile.banner || null , 
                 username : profile.username ,
                 avatar : profile.avatar || null ,
+                followers : profile.followers ,
+                following : profile.following ,
+                isFollowing : req.user?.id ? profile.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
                 createdAt : profile.createdAt , updatedAt : profile.updatedAt , 
                 ...(profile.githubUsername && { githubUsername: profile.githubUsername }),
                 ...(profile.googleId && { googleId: profile.googleId }),
@@ -233,4 +235,49 @@ const updateProfile = async (req , res)=>{
 }
 
 
-export { register , login , verifySession , logout , authCallback , updateProfile , getProfile}
+const followUnfollowUser = async (req, res) => {
+    try {
+        const { username } = req.params;
+        const currentUser = await User.findById(req.user.id);
+        const userToModify = await User.findOne({ username });
+
+        if (!userToModify) return res.status(404).json({ error: "User not found" });
+
+        if (userToModify._id.toString() === req.user.id.toString()) {
+            return res.status(400).json({ error: "You cannot follow/unfollow yourself" });
+        }
+
+        const isFollowing = currentUser.following.includes(userToModify._id);
+
+        if (isFollowing) {
+            // UNFOLLOW LOGIC
+            await User.findByIdAndUpdate(userToModify._id, { $pull: { followers: req.user.id } });
+            await User.findByIdAndUpdate(req.user.id, { $pull: { following: userToModify._id } });
+        } else {
+            // FOLLOW LOGIC
+            await User.findByIdAndUpdate(userToModify._id, { $addToSet: { followers: req.user.id } });
+            await User.findByIdAndUpdate(req.user.id, { $addToSet: { following: userToModify._id } });
+        }
+
+        const updatedProfile = await User.findById(userToModify._id)
+        res.json({ message : 'Following status updated successfully' , profile: {
+                name : updatedProfile.displayName , 
+                email : updatedProfile.email ,
+                bio : updatedProfile.bio || "",
+                banner : updatedProfile.banner || null , 
+                username : updatedProfile.username ,
+                avatar : updatedProfile.avatar || null ,
+                followers : updatedProfile.followers ,
+                following : updatedProfile.following ,
+                isFollowing : req.user?.id ? updatedProfile.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
+                createdAt : updatedProfile.createdAt , updatedAt : updatedProfile.updatedAt , 
+                ...(updatedProfile.githubUsername && { githubUsername: updatedProfile.githubUsername }),
+                ...(updatedProfile.googleId && { googleId: updatedProfile.googleId }),
+            } });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+export { register , login , verifySession , logout ,
+     authCallback , updateProfile , getProfile , followUnfollowUser}
