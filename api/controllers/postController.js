@@ -203,4 +203,27 @@ const likePost = async (req, res) => {
         });
     }   
 }
-export { createPost , getAllPosts , getPostById , likePost , getFollowingPosts , getPostsByAuthor}
+
+
+const deletePost = async (req, res) => {
+    try {
+        const { postId } = req.params
+        const userId = req.user.id 
+        const post = await Post.findById(postId)
+        if (!post){
+            return res.status(404).json({error : 'Post not found'})
+        }
+        if (post.author.toString() !== userId.toString()){
+            return res.status(403).json({error : 'You are not authorized to delete this post'})
+        }           
+        await Post.findByIdAndDelete(postId)
+        return res.json({message : 'Post deleted successfully'})
+    }
+    catch (err) {
+        console.error("Error deleting post:", err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+}
+export { createPost , getAllPosts , getPostById , likePost , getFollowingPosts , getPostsByAuthor , deletePost}
