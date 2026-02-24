@@ -28,7 +28,11 @@ const UserSchema = new mongoose.Schema({
   following : {
     type : [{type : mongoose.Schema.Types.ObjectId , ref : 'User'}],
     default : []
-  }
+  } ,
+  location: String,
+  linkedin: String,
+  github: String,
+  website: String 
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);

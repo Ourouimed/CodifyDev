@@ -8,67 +8,56 @@ import Notification from "../models/Notification.js"
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
 
+// --- AUTH CONTROLLERS ---
 
-const register = async (req , res)=>{
+const register = async (req, res) => {
     try {
-        const { name , username , email , password , confirmPass} = req.body
-        if (!name || !username || !email || !password || !confirmPass){
-            return res.status(401).json({
-                error : 'Some required fields are empty'
-            })
+        const { name, username, email, password, confirmPass } = req.body
+        if (!name || !username || !email || !password || !confirmPass) {
+            return res.status(401).json({ error: 'Some required fields are empty' })
         }
 
-    const user = await User.findOne({$or : [{email} , {username}] })
-    if (user){
-        return res.status(403).json({
-            error : 'User already exist'
+        const user = await User.findOne({ $or: [{ email }, { username }] })
+        if (user) {
+            return res.status(403).json({ error: 'User already exist' })
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        await User.create({
+            displayName: name,
+            username,
+            email,
+            password: hashedPassword
         })
-    }
 
+        return res.json({ message: 'User created successfully' })
 
-    const hashedPassword = await bcrypt.hash(password , 10)
-
-    await User.create({
-        displayName : name , username , email , password : hashedPassword
-    })
-
-    return res.json({message : 'User created successfully'})
-
-
-
-    }
-
-    catch (err){
+    } catch (err) {
         console.log(err)
-        res.status(500).json({error : 'Internal server error'})
+        res.status(500).json({ error: 'Internal server error' })
     }
 }
 
-
 const login = async (req, res) => {
-   
-
     const { email, password } = req.body;
-
     try {
         if (!email || !password) {
-        return res.status(400).json({ error: "All fields are required" });
+            return res.status(400).json({ error: "All fields are required" });
         }
 
-        const doc = await User.findOne({email})
+        const doc = await User.findOne({ email })
         if (!doc) {
-            return res.status(404).json({error : "User not found"})
+            return res.status(404).json({ error: "User not found" })
         }
 
-        const isMatch = await bcrypt.compare(password , doc.password)
+        const isMatch = await bcrypt.compare(password, doc.password)
         if (!isMatch) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
-         // Generate JWT token
-        const payload = { id: doc._id , email: doc.email};
+        const payload = { id: doc._id, email: doc.email };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
-        
 
         return res.cookie("token", token, {
             httpOnly: true,
@@ -76,22 +65,27 @@ const login = async (req, res) => {
             sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
             maxAge: 3600000,
         }).json({
-            message: "Login successful", user : {
-                name : doc.displayName , 
-                email : doc.email ,
-                bio : doc.bio || "",
-                banner : doc.banner || null ,
-                username : doc.username ,
-                avatar : doc.avatar || null , 
-                followers : doc.followers ,
-                following : doc.following ,
-                createdAt : doc.createdAt , updatedAt : doc.updatedAt ,
+            message: "Login successful",
+            user: {
+                name: doc.displayName,
+                email: doc.email,
+                bio: doc.bio || "",
+                location: doc.location || "",
+                website: doc.website || "",
+                linkedin: doc.linkedin || "",
+                github: doc.github || "",
+                banner: doc.banner || null,
+                username: doc.username,
+                avatar: doc.avatar || null,
+                followers: doc.followers,
+                following: doc.following,
+                createdAt: doc.createdAt,
+                updatedAt: doc.updatedAt,
                 ...(doc.githubUsername && { githubUsername: doc.githubUsername }),
                 ...(doc.googleId && { googleId: doc.googleId })
-            }})
-    }
-
-    catch (err) {
+            }
+        })
+    } catch (err) {
         console.error(err);
         return res.status(500).json({ error: "Internal server error" });
     }
@@ -101,149 +95,141 @@ const verifySession = async (req, res) => {
     try {
         const docUser = await User.findById(req.user.id)
         if (!docUser) {
-            return res.status(401).json({ error: 'Session expired or invalid. Please login again.' });
+            return res.status(401).json({ error: 'Session expired. Please login again.' });
         }
 
         return res.json({
-            message: "Session valid", user : {
-                name : docUser.displayName , 
-                email : docUser.email ,
-                bio : docUser.bio || "",
-                banner : docUser.banner || null ,
-                username : docUser.username ,
-                avatar : docUser.avatar || null , 
-                followers : docUser.followers ,
-                following : docUser.following ,
-                createdAt : docUser.createdAt , updatedAt : docUser.updatedAt ,
+            message: "Session valid",
+            user: {
+                name: docUser.displayName,
+                email: docUser.email,
+                bio: docUser.bio || "",
+                location: docUser.location || "",
+                website: docUser.website || "",
+                linkedin: docUser.linkedin || "",
+                github: docUser.github || "",
+                banner: docUser.banner || null,
+                username: docUser.username,
+                avatar: docUser.avatar || null,
+                followers: docUser.followers,
+                following: docUser.following,
+                createdAt: docUser.createdAt,
+                updatedAt: docUser.updatedAt,
                 ...(docUser.githubUsername && { githubUsername: docUser.githubUsername }),
                 ...(docUser.googleId && { googleId: docUser.googleId }),
-            }})
-    }
-    catch (err) {
-        console.error(err);
-        return res.status(401).json({ error: 'Session expired or invalid. Please login again.' });
+            }
+        })
+    } catch (err) {
+        return res.status(401).json({ error: 'Session invalid' });
     }
 }
-
 
 const logout = async (req, res) => {
     return res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'lax',
-    }).json({ message: 'Logout successfull', })
+    }).json({ message: 'Logout successful' })
 }
 
+// --- PROFILE CONTROLLERS ---
 
-const getProfile = async (req , res)=>{
+const getProfile = async (req, res) => {
     try {
         const { id } = req.params
+        const profile = await User.findOne({ username: id })
+        if (!profile) return res.status(404).json({ error: 'User not found' })
 
-        if (!id){
-            return res.status(400).json({error : 'Id is required'})
-        }
-
-        const profile = await User.findOne({username : id})
-        if (!profile){
-            return res.status(404).json({error : 'User not found'})
-        }
-
-        return res.json({profile : {
-                name : profile.displayName , 
-                email : profile.email ,
-                bio : profile.bio || "",
-                banner : profile.banner || null , 
-                username : profile.username ,
-                avatar : profile.avatar || null ,
-                followers : profile.followers ,
-                following : profile.following ,
-                isFollowing : req.user?.id ? profile.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
-                createdAt : profile.createdAt , updatedAt : profile.updatedAt , 
+        return res.json({
+            profile: {
+                name: profile.displayName,
+                email: profile.email,
+                bio: profile.bio || "",
+                location: profile.location || "",
+                website: profile.website || "",
+                linkedin: profile.linkedin || "",
+                github: profile.github || "",
+                banner: profile.banner || null,
+                username: profile.username,
+                avatar: profile.avatar || null,
+                followers: profile.followers,
+                following: profile.following,
+                isFollowing: req.user?.id ? profile.followers.some(f => f.toString() === req.user.id.toString()) : false,
+                createdAt: profile.createdAt,
+                updatedAt: profile.updatedAt,
                 ...(profile.githubUsername && { githubUsername: profile.githubUsername }),
                 ...(profile.googleId && { googleId: profile.googleId }),
-            }})
-    }
-
-    catch (err) {
-        console.error(err);
+            }
+        })
+    } catch (err) {
         return res.status(500).json({ error: "Internal server error" });
     }
-    
 }
 
-const authCallback = (req, res) => {
-    const user = req.user
-
-    if (!user) return res.redirect('http://localhost:3000/auth');
-
-    
-    const payload = { id: user._id , email: user.email};
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
-            
-    
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
-        maxAge: 3600000,
-    })
-    res.redirect('http://localhost:3000/feed');
-  }
-
-
-const updateProfile = async (req , res)=>{
+const updateProfile = async (req, res) => {
     try {
-        const { name , username} = req.body
+        const { name, username, bio, email, location, linkedin, github, website } = req.body
         const avatarFile = req.files?.['avatar']?.[0];
         const bannerFile = req.files?.['banner']?.[0];
 
-        if (!name || !username){
-            return res.status(400).json({error : 'Some required fields are missing'})
+        if (!name || !username) {
+            return res.status(400).json({ error: 'Name and Username are required' })
         }
 
-        let avatar_url
-        let banner_url
-
-        if (avatarFile?.buffer){
-            avatar_url = await uploadImage(avatarFile?.buffer , 'avatars')
-        }
-
-        if (bannerFile?.buffer){
-            banner_url = await uploadImage(bannerFile?.buffer , 'banners')
-        }
-        const updatedUser = await User.findByIdAndUpdate(req.user.id , {
-                $set: {
-                    name: req.body.name,
-                    bio: req.body.bio,
-                    ...(avatar_url && { avatar: avatar_url }),
-                    ...(banner_url && { banner: banner_url }),
-                }
-            },
-            { new: true })
-        res.json({message : 'User updated successfully' , user : {
-                name : updatedUser.displayName , 
-                email : updatedUser.email ,
-                bio : updatedUser.bio || "",
-                banner : updatedUser.banner || null , 
-                username : updatedUser.username ,
-                avatar : updatedUser.avatar || null ,
-                followers : updatedUser.followers ,
-                following : updatedUser.following ,
-                isFollowing : req.user?.id ? updatedUser.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
-                createdAt : updatedUser.createdAt , updatedAt : updatedUser.updatedAt , 
-                ...(updatedUser.githubUsername && { githubUsername: updatedUser.githubUsername }),
-                ...(updatedUser.googleId && { googleId: updatedUser.googleId }),
-            }})
-    }
-
-    catch (err){
-        console.log(err)
-        return res.status(500).json({
-            error : 'Internal server error'
+        // Check for conflicts
+        const conflict = await User.findOne({ 
+            $or: [{ username }, { email }], 
+            _id: { $ne: req.user.id } 
         })
+        if (conflict) {
+            const field = conflict.username === username ? 'Username' : 'Email';
+            return res.status(403).json({ error: `${field} already taken` })
+        }
+
+        let avatar_url, banner_url;
+        if (avatarFile?.buffer) avatar_url = await uploadImage(avatarFile.buffer, 'avatars')
+        if (bannerFile?.buffer) banner_url = await uploadImage(bannerFile.buffer, 'banners')
+
+        const updatedUser = await User.findByIdAndUpdate(req.user.id, {
+            $set: {
+                displayName: name,
+                username: username,
+                bio: typeof bio === 'object' ? bio.bio : bio, // CastError prevention
+                email: email,
+                location: location || "",
+                linkedin: linkedin || "",
+                github: github || "",
+                website: website || "",
+                ...(avatar_url && { avatar: avatar_url }),
+                ...(banner_url && { banner: banner_url }),
+            }
+        }, { new: true, runValidators: true })
+
+        res.json({
+            message: 'User updated successfully',
+            user: {
+                name: updatedUser.displayName,
+                email: updatedUser.email,
+                bio: updatedUser.bio || "",
+                location: updatedUser.location || "",
+                website: updatedUser.website || "",
+                linkedin: updatedUser.linkedin || "",
+                github: updatedUser.github || "",
+                username: updatedUser.username,
+                avatar: updatedUser.avatar || null,
+                banner: updatedUser.banner || null,
+                followers: updatedUser.followers,
+                following: updatedUser.following,
+                createdAt: updatedUser.createdAt,
+                updatedAt: updatedUser.updatedAt
+            }
+        })
+    } catch (err) {
+        console.log(err)
+        if (err.name === 'CastError') return res.status(400).json({ error: 'Invalid data format' })
+        return res.status(500).json({ error: 'Internal server error' })
     }
 }
-
 
 const followUnfollowUser = async (req, res) => {
     try {
@@ -252,58 +238,53 @@ const followUnfollowUser = async (req, res) => {
         const userToModify = await User.findOne({ username });
 
         if (!userToModify) return res.status(404).json({ error: "User not found" });
-
         if (userToModify._id.toString() === req.user.id.toString()) {
-            return res.status(400).json({ error: "You cannot follow/unfollow yourself" });
+            return res.status(400).json({ error: "You cannot follow yourself" });
         }
 
         const isFollowing = currentUser.following.includes(userToModify._id);
 
         if (isFollowing) {
-            // UNFOLLOW LOGIC
             await User.findByIdAndUpdate(userToModify._id, { $pull: { followers: req.user.id } });
             await User.findByIdAndUpdate(req.user.id, { $pull: { following: userToModify._id } });
-            await Notification.findOneAndDelete({
-                recipient : userToModify._id , 
-                sender : req.user.id ,
-                type : 'follow' , 
-            });
+            await Notification.findOneAndDelete({ recipient: userToModify._id, sender: req.user.id, type: 'follow' });
         } else {
-            // FOLLOW LOGIC
             await User.findByIdAndUpdate(userToModify._id, { $addToSet: { followers: req.user.id } });
             await User.findByIdAndUpdate(req.user.id, { $addToSet: { following: userToModify._id } });
-            await Notification.findOneAndDelete({
-                recipient : userToModify._id , 
-                sender : req.user.id ,
-                type : 'follow' , 
-            });
-            await Notification.create({
-                recipient : userToModify._id , 
-                sender : req.user.id , 
-                type : 'follow', 
-            })
+            await Notification.create({ recipient: userToModify._id, sender: req.user.id, type: 'follow' })
         }
 
         const updatedProfile = await User.findById(userToModify._id)
-        res.json({ message : 'Following status updated successfully' , profile: {
-                name : updatedProfile.displayName , 
-                email : updatedProfile.email ,
-                bio : updatedProfile.bio || "",
-                banner : updatedProfile.banner || null , 
-                username : updatedProfile.username ,
-                avatar : updatedProfile.avatar || null ,
-                followers : updatedProfile.followers ,
-                following : updatedProfile.following ,
-                isFollowing : req.user?.id ? updatedProfile.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
-                createdAt : updatedProfile.createdAt , updatedAt : updatedProfile.updatedAt , 
-                ...(updatedProfile.githubUsername && { githubUsername: updatedProfile.githubUsername }),
-                ...(updatedProfile.googleId && { googleId: updatedProfile.googleId }),
-            } });
+        res.json({ 
+            message: 'Success', 
+            profile: {
+                name: updatedProfile.displayName,
+                username: updatedProfile.username,
+                avatar: updatedProfile.avatar,
+                followers: updatedProfile.followers,
+                isFollowing: !isFollowing
+            } 
+        });
     } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: err.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
-export { register , login , verifySession , logout ,
-     authCallback , updateProfile , getProfile , followUnfollowUser}
+const authCallback = (req, res) => {
+    const user = req.user
+    if (!user) return res.redirect('http://localhost:3000/auth');
+    const payload = { id: user._id, email: user.email };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "1h" });
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
+        maxAge: 3600000,
+    })
+    res.redirect('http://localhost:3000/feed');
+}
+
+export { 
+    register, login, verifySession, logout, 
+    authCallback, updateProfile, getProfile, followUnfollowUser 
+}
