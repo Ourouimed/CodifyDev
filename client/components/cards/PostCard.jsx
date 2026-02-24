@@ -1,27 +1,46 @@
 'use client'
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useDispatch } from "react-redux";
 import { formatDistanceToNowStrict } from "date-fns";
 import { 
     EllipsisVertical, Heart, UserPlus, MessageCircle, 
-    Share, UserCheck, ChevronLeft, ChevronRight 
+    Share, UserCheck, ChevronLeft, ChevronRight, 
+    Trash2, Bookmark, Link as LinkIcon, Flag, VolumeX
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { likePost, toggleLikePost, updateFollowStatus } from "@/store/features/posts/postSlice";
 import { followUnfollow } from "@/services/followUnfollow";
 import { useAuth } from "@/hooks/useAuth";
+import { usePopup } from "@/hooks/usePopup";
 
-const PostCard = ({ post, isExpandedText }) => {
+const PostCard = ({ post, isExpandedText }) => { 
     const [isExpanded, setIsExpanded] = useState(isExpandedText || false);
     const [activeIndex, setActiveIndex] = useState(0);
     const scrollRef = useRef(null);
     const dispatch = useDispatch();
     const toast = useToast();
     const { user } = useAuth();
+
+    // ACTIONS DROP DOWN
+    const [isOpen, setIsOpen] = useState(false)
+    const dropdownRef = useRef(null)
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false)
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
+
+    // Popup
+    const { openPopup } = usePopup()
 
     // Configuration
     const CHAR_LIMIT = 200;
@@ -64,7 +83,10 @@ const PostCard = ({ post, isExpandedText }) => {
     const handleShare = () => {
         const postUrl = `${window.location.origin}/feed/post/${post._id}`;
         navigator.clipboard.writeText(postUrl)
-            .then(() => toast.success('Link copied to clipboard'))
+            .then(() => {
+                toast.success('Link copied to clipboard');
+                setIsOpen(false);
+            })
             .catch(() => toast.error('Failed to copy link'));
     };
 
@@ -78,13 +100,13 @@ const PostCard = ({ post, isExpandedText }) => {
         }
     };
 
+
     const renderSlideshow = () => {
         const images = post.images || [];
         if (images.length === 0) return null;
 
         return (
             <div className="relative group mt-3">
-                {/* Main Slideshow Container */}
                 <div 
                     ref={scrollRef}
                     onScroll={handleScroll}
@@ -104,7 +126,6 @@ const PostCard = ({ post, isExpandedText }) => {
                     ))}
                 </div>
 
-                {/* Desktop Navigation Arrows */}
                 {images.length > 1 && (
                     <>
                         {activeIndex > 0 && (
@@ -126,14 +147,12 @@ const PostCard = ({ post, isExpandedText }) => {
                     </>
                 )}
 
-                {/* Photo Counter Overlay */}
                 {images.length > 1 && (
                     <div className="absolute top-3 right-3 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full backdrop-blur-sm">
                         {activeIndex + 1}/{images.length}
                     </div>
                 )}
 
-                {/* Instagram Style Dot Indicators */}
                 {images.length > 1 && (
                     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 px-2 py-1 bg-black/20 backdrop-blur-md rounded-full">
                         {images.map((_, index) => (
@@ -149,6 +168,16 @@ const PostCard = ({ post, isExpandedText }) => {
             </div>
         );
     };
+
+
+    const handleOpenDeletePopup = () => {
+        openPopup({
+            title: "Delete Post", 
+            component : 'DeletePost',
+            props: { id: post._id } ,
+        })
+        setIsOpen(false);
+    }
 
     return (
         <div className="p-4 rounded-xl border border-border space-y-3 bg-card transition-all hover:shadow-sm">
@@ -192,9 +221,55 @@ const PostCard = ({ post, isExpandedText }) => {
                             {post.isFollowing ? <UserCheck className="w-3.5 h-3.5"/> : <UserPlus className="w-3.5 h-3.5"/>}
                         </Button>
                     )}
-                    <button className="p-1 hover:bg-muted rounded-full transition-colors text-muted-foreground">
-                        <EllipsisVertical className="w-4 h-4"/>
-                    </button>
+                    <div className="relative" ref={dropdownRef}>
+                        <button className="cursor-pointer p-2 hover:text-primary 
+                                        hover:bg-primary/10 rounded-full transition-all" 
+                                        onClick={()=> setIsOpen(!isOpen)}>
+                            <EllipsisVertical className="w-4 h-4"/>
+                        </button>
+                        {isOpen && (
+                            <div className="z-50 min-w-56 absolute right-0 mt-2 bg-background border border-border rounded-xl shadow-xl animate-in fade-in zoom-in duration-200 divide-y divide-border overflow-hidden">
+                                <div className="p-1.5">
+                                    <button 
+                                        className='cursor-pointer w-full flex items-center gap-2 text-sm hover:bg-secondary py-2 px-3 rounded-md transition-colors' 
+                                    >
+                                        <Bookmark size={16}/>
+                                        Save Post
+                                    </button>
+                                    <button 
+                                        className='cursor-pointer w-full flex items-center gap-2 text-sm hover:bg-secondary py-2 px-3 rounded-md transition-colors' 
+                                        onClick={handleShare}
+                                    >
+                                        <LinkIcon size={16}/>
+                                        Copy Link
+                                    </button>
+                                </div>
+                                
+                                <div className="p-1.5">
+                                    {post.author?.username !== user?.username && (
+                                        <>
+                                            <button 
+                                                className='cursor-pointer w-full flex items-center gap-2 text-sm text-destructive hover:bg-red-500/10 py-2 px-3 rounded-md transition-colors' 
+                                            >
+                                                <Flag size={16}/>
+                                                Report Post
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {post.author?.username === user?.username && (
+                                        <button 
+                                            className='cursor-pointer w-full flex items-center gap-2 text-sm text-destructive hover:bg-red-500/10 py-2 px-3 rounded-md transition-colors' 
+                                            onClick={handleOpenDeletePopup}
+                                        >
+                                            <Trash2 size={16}/>
+                                            Delete Post
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -252,7 +327,7 @@ const PostCard = ({ post, isExpandedText }) => {
                 </div>
                 <button 
                     onClick={handleShare}
-                    className="cursor-pointer p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-all"
+                    className="cursor-pointer p-2 hover:text-primary hover:bg-primary/10 rounded-full transition-all"
                 >
                     <Share className="w-4 h-4" />
                 </button>

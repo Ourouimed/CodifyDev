@@ -33,5 +33,14 @@ const getPostsByAuthor = async (authorId) => {
     const response = await axiosService.get(`/api/posts/author/${authorId}`);
     return response.data; 
 };
-const postService = {createPost , getAll , likePost, getSinglePost , getFollowingPosts , getPostsByAuthor}
+
+
+const deletePost = async (postId) => {
+    const response = await axiosService.delete(`/api/posts/delete/${postId}`);
+    return response.data;
+};
+
+
+const postService = {createPost , getAll , likePost, deletePost ,
+                        getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService

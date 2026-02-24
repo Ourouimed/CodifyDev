@@ -60,6 +60,16 @@ export const getPostsByAuthor = createAsyncThunk('posts/getByAuthor' , async (au
     }
 })
 
+
+export const deletePost = createAsyncThunk('posts/delete' , async (postId , thunkAPI)=>{
+    try {
+        return await postService.deletePost(postId)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const postSlice = createSlice({
     name : 'post',
     initialState : {
@@ -110,6 +120,22 @@ export const postSlice = createSlice({
     })
     .addCase(createPost.rejected , (state , action)=>{
         state.isPosting = false
+        console.log(action.payload)
+    })
+
+
+     // delete post 
+    .addCase(deletePost.pending , (state)=>{
+        state.isLoading = true
+    })
+    .addCase(deletePost.fulfilled , (state , action)=>{
+        state.isLoading = false
+        console.log(action.payload)
+        state.posts = state.posts.filter(post => post._id !== action.payload.post._id)
+        console.log(action.payload)
+    })
+    .addCase(deletePost.rejected , (state , action)=>{
+        state.isLoading = false
         console.log(action.payload)
     })
 
