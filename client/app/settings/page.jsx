@@ -1,11 +1,13 @@
 'use client'
-
-import { useAuth } from "@/hooks/useAuth"
-import Link from "next/link"
-
-const { default: SettingsLayout } = require("./SettingsLayout")
+import { useEffect } from "react"
+import SettingsLayout from "../SettingsLayout"
+import { useRouter } from "next/navigation"
 
 const SettingsPage = () => {
+    const router = useRouter()
+    useEffect(()=>{
+        router.push('/settings/profile')
+    },[])
     return <SettingsLayout>
         
     </SettingsLayout>

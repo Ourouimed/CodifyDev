@@ -104,7 +104,6 @@ export const authSlice = createSlice({
     })
     .addCase(update.rejected, (state, action) => {
       state.isLoading = false;
-      state.user = null
     })
     
 
