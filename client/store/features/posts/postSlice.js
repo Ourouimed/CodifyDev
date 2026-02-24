@@ -130,8 +130,8 @@ export const postSlice = createSlice({
     })
     .addCase(deletePost.fulfilled , (state , action)=>{
         state.isLoading = false
-        console.log(action.payload)
-        state.posts = state.posts.filter(post => post._id !== action.payload.post._id)
+        const id = action.meta.arg
+        state.posts = state.posts.filter(post => post._id !== id)
         console.log(action.payload)
     })
     .addCase(deletePost.rejected , (state , action)=>{

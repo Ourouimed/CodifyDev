@@ -4,7 +4,6 @@ import {
   Code2, 
   Briefcase, 
   LayoutGrid, 
-  Bell, 
   Calendar
 } from "lucide-react";
 
@@ -30,3 +29,17 @@ export const sideMenu = [
         name: "Code Snippets"
     },
 ];
+
+
+export const settingsMenu = [
+    {
+        url: '/settings/profile',
+        icon: LayoutGrid, 
+        name: "Profile"
+    } ,
+    {
+        url: '/settings/account',
+        icon: Briefcase,
+        name: "Account"
+    },
+]
