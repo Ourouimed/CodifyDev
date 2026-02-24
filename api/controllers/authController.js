@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken'
 import { uploadImage } from "../lib/upload-image.js";
+import Notification from "../models/Notification.js"
 
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
@@ -262,10 +263,25 @@ const followUnfollowUser = async (req, res) => {
             // UNFOLLOW LOGIC
             await User.findByIdAndUpdate(userToModify._id, { $pull: { followers: req.user.id } });
             await User.findByIdAndUpdate(req.user.id, { $pull: { following: userToModify._id } });
+            await Notification.findOneAndDelete({
+                recipient : userToModify._id , 
+                sender : req.user.id ,
+                type : 'follow' , 
+            });
         } else {
             // FOLLOW LOGIC
             await User.findByIdAndUpdate(userToModify._id, { $addToSet: { followers: req.user.id } });
             await User.findByIdAndUpdate(req.user.id, { $addToSet: { following: userToModify._id } });
+            await Notification.findOneAndDelete({
+                recipient : userToModify._id , 
+                sender : req.user.id ,
+                type : 'follow' , 
+            });
+            await Notification.create({
+                recipient : userToModify._id , 
+                sender : req.user.id , 
+                type : 'follow', 
+            })
         }
 
         const updatedProfile = await User.findById(userToModify._id)
@@ -284,6 +300,7 @@ const followUnfollowUser = async (req, res) => {
                 ...(updatedProfile.googleId && { googleId: updatedProfile.googleId }),
             } });
     } catch (err) {
+        console.log(err);
         res.status(500).json({ error: err.message });
     }
 };

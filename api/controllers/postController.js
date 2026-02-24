@@ -1,6 +1,7 @@
 import { uploadImage } from "../lib/upload-image.js"
 import Post from "../models/Post.js"
 import User from "../models/User.js"
+import Notification from "../models/Notification.js"
 
 const createPost = async (req, res) => {
     try {
@@ -83,11 +84,6 @@ const getAllPosts = async (req, res) => {
         });
     }
 };
-
-
-
-
-
 
 const getFollowingPosts = async (req, res) => {
     try {
@@ -189,11 +185,32 @@ const likePost = async (req, res) => {
         const isLiked = post.likes.some(id => id.toString() === userId.toString())
         if (isLiked){
             post.likes = post.likes.filter(id => id.toString() !== userId.toString())
+            await Notification.findOneAndDelete({
+                recipient : post.author , 
+                sender : userId ,
+                type : 'like' , 
+                post : post._id
+            });
         }
         else {
             post.likes.push(userId)
+            if (post.author.toString() !== userId.toString()){
+                await Notification.findOneAndDelete({
+                    recipient : post.author , 
+                    sender : userId ,
+                    type : 'like' , 
+                    post : post._id
+                });
+                await Notification.create({
+                    recipient : post.author , 
+                    sender : userId , 
+                    type : 'like', 
+                    post : post._id ,
+                })
+            }
         }
         await post.save()
+        
         return res.json({message : 'Post liked/unliked successfully' , post})
     }
     catch (err) {

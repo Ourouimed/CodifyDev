@@ -8,6 +8,7 @@ import connectDB from './config/db.js';
 // import routes
 import authRouter from './routes/auth.js'
 import postRouter from './routes/post.js'
+import notificationRouter from './routes/notification.js'
 
 import './config/passport.js'
 
@@ -34,7 +35,7 @@ app.get('/', (req, res) => {
 // configure routes 
 app.use('/api/auth' , authRouter)
 app.use('/api/posts' , postRouter)
-
+app.use('/api/notifications' , notificationRouter)
 
 const startServer = async () => {
   console.log('Connecting server ...')
