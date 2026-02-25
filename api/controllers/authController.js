@@ -81,6 +81,7 @@ const login = async (req, res) => {
                 following: doc.following,
                 createdAt: doc.createdAt,
                 updatedAt: doc.updatedAt,
+                hasPassword : doc.password ? true : false, 
                 ...(doc.githubUsername && { githubUsername: doc.githubUsername }),
                 ...(doc.googleId && { googleId: doc.googleId })
             }
@@ -115,6 +116,7 @@ const verifySession = async (req, res) => {
                 following: docUser.following,
                 createdAt: docUser.createdAt,
                 updatedAt: docUser.updatedAt,
+                hasPassword : docUser.password ? true : false, 
                 ...(docUser.githubUsername && { githubUsername: docUser.githubUsername }),
                 ...(docUser.googleId && { googleId: docUser.googleId }),
             }
@@ -168,7 +170,7 @@ const getProfile = async (req, res) => {
 
 const updateProfile = async (req, res) => {
     try {
-        const { name, username, bio, email, location, linkedin, github, website } = req.body
+        const { name, username, bio, location, linkedin, github, website } = req.body
         const avatarFile = req.files?.['avatar']?.[0];
         const bannerFile = req.files?.['banner']?.[0];
 
@@ -177,13 +179,9 @@ const updateProfile = async (req, res) => {
         }
 
         // Check for conflicts
-        const conflict = await User.findOne({ 
-            $or: [{ username }, { email }], 
-            _id: { $ne: req.user.id } 
-        })
+        const conflict = await User.findOne({ username , _id: { $ne: req.user.id }})
         if (conflict) {
-            const field = conflict.username === username ? 'Username' : 'Email';
-            return res.status(403).json({ error: `${field} already taken` })
+            return res.status(403).json({ error: `username already taken` })
         }
 
         let avatar_url, banner_url;
@@ -194,8 +192,7 @@ const updateProfile = async (req, res) => {
             $set: {
                 displayName: name,
                 username: username,
-                bio: typeof bio === 'object' ? bio.bio : bio, // CastError prevention
-                email: email,
+                bio : bio ,
                 location: location || "",
                 linkedin: linkedin || "",
                 github: github || "",
@@ -270,6 +267,110 @@ const followUnfollowUser = async (req, res) => {
     }
 };
 
+
+const setEmail = async (req , res)=>{
+    try {
+        const userId = req.user.id
+        const {email} = req.body
+        if (!email){
+            res.status(400).json({error : 'Email is required'})
+        }
+
+        const emailExists = await User.findOne({email})
+        if (emailExists){
+            res.status(400).json({error : 'This email is already taken'})
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userId , {email})
+        return res.json({
+            message: 'Email set successfully',
+            user: {
+                name: updatedUser.displayName,
+                email: updatedUser.email,
+                bio: updatedUser.bio || "",
+                location: updatedUser.location || "",
+                website: updatedUser.website || "",
+                linkedin: updatedUser.linkedin || "",
+                github: updatedUser.github || "",
+                username: updatedUser.username,
+                avatar: updatedUser.avatar || null,
+                banner: updatedUser.banner || null,
+                hasPassword : updatedUser.password ? true : false, 
+                followers: updatedUser.followers,
+                following: updatedUser.following,
+                createdAt: updatedUser.createdAt,
+                updatedAt: updatedUser.updatedAt
+            }
+        })
+
+
+    }
+    catch (err) {
+        console.log(err)
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+
+const setPassword = async (req, res) => {
+    try {
+        const { old_password, new_password, confirm_password } = req.body;
+
+        if (!new_password) {
+            return res.status(400).json({ error: 'New password is required!!' });
+        }
+
+        if (new_password !== confirm_password) {
+            return res.status(400).json({ error: 'Passwords do not match' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        if (user.password) {
+            if (!old_password) {
+                return res.status(400).json({ error: "Current password is required to set a new one" });
+            }
+            const isMatch = await bcrypt.compare(old_password, user.password);
+            if (!isMatch) {
+                return res.status(403).json({ error: 'Incorrect current password' });
+            }
+        }
+
+        const hashedNewPassword = await bcrypt.hash(new_password, 10);
+        
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user.id, 
+            { password: hashedNewPassword }, 
+            { new: true } 
+        );
+
+        return res.status(200).json({
+            message: 'Password set successfully',
+            user: {
+                name: updatedUser.displayName,
+                email: updatedUser.email,
+                username: updatedUser.username,
+                avatar: updatedUser.avatar || null,
+                hasPassword: !!updatedUser.password,
+                followers: updatedUser.followers,
+                following: updatedUser.following,
+                createdAt: updatedUser.createdAt,
+                updatedAt: updatedUser.updatedAt
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        // Ensure only one response is sent in the catch block
+        if (!res.headersSent) {
+            return res.status(500).json({ error: "Internal server error" });
+        }
+    }
+}
+
 const authCallback = (req, res) => {
     const user = req.user
     if (!user) return res.redirect('http://localhost:3000/auth');
@@ -285,6 +386,6 @@ const authCallback = (req, res) => {
 }
 
 export { 
-    register, login, verifySession, logout, 
+    register, login, verifySession, logout, setEmail , setPassword , 
     authCallback, updateProfile, getProfile, followUnfollowUser 
 }

@@ -1,7 +1,7 @@
 import express from 'express'
 import verifyJWT from '../middlewares/verifyJWT.js'
 import passport from 'passport';
-import { authCallback, followUnfollowUser, getProfile, login, logout, register, updateProfile, verifySession } from '../controllers/authController.js'
+import { authCallback, followUnfollowUser, getProfile, login, logout, register, updateProfile ,setPassword , setEmail , verifySession } from '../controllers/authController.js'
 import { config } from 'dotenv';
 import multer from 'multer'
 
@@ -51,6 +51,8 @@ router.get('/google/callback',
 
 
 router.post('/follow/:username' , verifyJWT , followUnfollowUser)
+router.post('/setEmail' , verifyJWT , setEmail)
+router.post('/setPassword' , verifyJWT , setPassword)
 
 
 export default router
