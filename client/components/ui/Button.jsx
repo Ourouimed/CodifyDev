@@ -4,7 +4,8 @@ export const Button = ({children , variant = 'DEFAULT' , className , href , ...p
         DEFAULT : 'border-transparent bg-foreground text-background' ,
         PRIMARY : 'border-transparent bg-primary text-black',
         TRANSPARENT : 'border-transparent bg-transparent' ,
-        OUTLINE : 'bg-transparent border-border'
+        OUTLINE : 'bg-transparent border-border' ,
+        DESTRUCTIVE: 'border-transparent bg-red-600 text-white hover:bg-red-700 shadow-sm'
     }
     if(href){
         return <a href={href} {...props} className={`${BASE_STYLE} ${VARIANTS[variant.toUpperCase()]} ${className}`}>

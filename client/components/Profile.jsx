@@ -78,9 +78,9 @@ const Profile = ({ user, isMyProfile, setProfile }) => {
                                 {user.isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
                             </Button>
                         )}
-                        <Button variant="secondary" onClick={handleShare} className="flex gap-2">
-                            <span className="hidden xs:inline text-sm">Share</span>
-                            <Share className="w-4 h-4" />
+                        <Button onClick={handleShare}>
+                            <span className="text-xs sm:text-sm">Share</span> 
+                            <Share className="w-3.5 h-3.5"/>
                         </Button>
                     </div>
                 </div>

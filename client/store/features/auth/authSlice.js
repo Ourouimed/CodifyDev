@@ -52,6 +52,28 @@ export const verifySession = createAsyncThunk('auth/verify-session' , async (_ ,
   }
 })
 
+
+
+export const setEmail = createAsyncThunk('auth/setEmail' , async (email , thunkAPI)=>{
+  try {
+    return await authService.setEmail(email)
+  }
+  catch (err){
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
+
+export const setPassword = createAsyncThunk('auth/setPassword' , async (password , thunkAPI)=>{
+  try {
+    console.log(password)
+    return await authService.setPassword(password)
+  }
+  catch (err){
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
 export const authSlice = createSlice({
     name : 'auth' ,
     initialState : {
@@ -122,6 +144,37 @@ export const authSlice = createSlice({
       state.isLoading = false;
       state.user = null
       state.isInitialized = true;
+      console.log(action.payload)
+    })
+
+
+    // set email
+    .addCase(setEmail.pending, (state) => {
+      state.isLoading = true
+    })
+    .addCase(setEmail.fulfilled, (state, action) => {
+      state.isLoading = false;
+      console.log(action.payload)
+      state.user = action.payload.user
+    })
+    .addCase(setEmail.rejected, (state, action) => {
+      state.isLoading = false;
+      console.log(action.payload)
+    })
+
+
+
+    // set password
+    .addCase(setPassword.pending, (state) => {
+      state.isLoading = true
+    })
+    .addCase(setPassword.fulfilled, (state, action) => {
+      state.isLoading = false;
+      console.log(action.payload)
+      state.user = action.payload.user
+    })
+    .addCase(setPassword.rejected, (state, action) => {
+      state.isLoading = false;
       console.log(action.payload)
     })
 

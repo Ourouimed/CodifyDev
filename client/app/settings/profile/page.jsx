@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/hooks/useToast";
 import { useDispatch } from "react-redux";
-import { Camera, Loader2, Globe, Github, MapPin, Linkedin } from "lucide-react"; 
+import { Camera, Loader2, Globe, Github, MapPin, Linkedin, User } from "lucide-react"; 
 import { TextArea } from "@/components/ui/TextArea";
 import { update } from "@/store/features/auth/authSlice";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,7 +20,6 @@ const ProfilePage = () => {
         name: "",
         username: "",
         bio: "",
-        email: "",
         location: "", 
         avatar: null,
         banner: null,
@@ -45,7 +44,6 @@ const ProfilePage = () => {
                 location: user?.location || "", 
                 avatar: user?.avatar || null,
                 banner: user?.banner || null,
-                email: user?.email || "",
                 linkedin: user?.linkedin || "",
                 github: user?.github || "",
                 website: user?.website || "",
@@ -117,15 +115,18 @@ const ProfilePage = () => {
         <SettingsLayout>
             <div className="bg-background rounded-lg border border-border">
                 <div className="p-4 border-b border-border flex justify-between items-center">
-                    <h2 className="text-lg font-semibold">Profile Settings</h2>
+                    <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-primary" />
+                        <h2 className="text-lg font-semibold tracking-tight">Profile Settings</h2>
+                    </div>
+                   
                     <Button onClick={handleUpdateProfile} disabled={isLoading} className={isLoading ? 'opacity-50' : ''}>
-                        {isLoading && <Loader2 className="animate-spin mr-2" />}
+                        {isLoading && <Loader2 className="animate-spin" />}
                         {isLoading ? 'Saving...' : 'Save Changes'}
                     </Button>
                 </div>
 
                 <div className="space-y-4 p-4">
-                    {/* Banner and Avatar sections remain unchanged... */}
                     <div className="relative group">
                         <label className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2 block">Cover Photo</label>
                         <div className="relative h-40 w-full rounded-xl overflow-hidden border border-dashed border-border group-hover:border-primary transition duration">
@@ -174,20 +175,6 @@ const ProfilePage = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="email">
-                                Email Address {user?.email && <span className="lowercase font-normal opacity-70">(Verified)</span>}
-                            </label>
-                            <Input 
-                                id="email" 
-                                type="email"
-                                value={profileForm.email} 
-                                onChange={handleChange} 
-                                disabled={!!user?.email} 
-                                placeholder={!user?.email ? "Set your email address" : ""}
-                            />
-                            {!user?.email && <p className="text-[10px] text-amber-500 italic">Once set, email cannot be changed easily.</p>}
-                        </div>
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase tracking-wider text-gray-500" htmlFor="bio">Bio</label>
