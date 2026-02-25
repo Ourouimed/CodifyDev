@@ -1,9 +1,12 @@
 import User from "../models/User.js"
+import Post from "../models/Post.js"
 import bcrypt from 'bcryptjs'
 import dotenv from "dotenv";
 import jwt from 'jsonwebtoken'
 import { uploadImage } from "../lib/upload-image.js";
 import Notification from "../models/Notification.js"
+import mongoose from "mongoose";
+
 
 dotenv.config()
 const JWT_SECRET = process.env.JWT_SECRET
@@ -281,7 +284,7 @@ const setEmail = async (req , res)=>{
             res.status(400).json({error : 'This email is already taken'})
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId , {email})
+        const updatedUser = await User.findByIdAndUpdate(userId , {email} , { new: true } )
         return res.json({
             message: 'Email set successfully',
             user: {
@@ -364,12 +367,46 @@ const setPassword = async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        // Ensure only one response is sent in the catch block
-        if (!res.headersSent) {
-            return res.status(500).json({ error: "Internal server error" });
-        }
+        return res.status(500).json({ error: "Internal server error" });
     }
 }
+
+
+
+const deleteAccount = async (req , res)=>{
+    try {
+        const userId = req.user.id 
+        await Post.deleteMany({ author : userId})
+        await Notification.deleteMany({ $or : [
+            { sender: userId },
+            { recipient: userId }
+        ]})
+
+        await User.updateMany(
+            { followers: userId },
+            { $pull: { followers: userId } }
+        );
+
+        await Post.updateMany(
+            { likes: userId },
+            { $pull: { likes: userId } }
+        );
+
+        await User.updateMany(
+            { following: userId },
+            { $pull: { following: userId } }
+        );
+        await User.findByIdAndDelete(userId)
+
+        res.clearCookie("token");
+        return res.status(200).json({ message: "Account deleted successfully" })
+    }
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+}
+
 
 const authCallback = (req, res) => {
     const user = req.user
@@ -387,5 +424,5 @@ const authCallback = (req, res) => {
 
 export { 
     register, login, verifySession, logout, setEmail , setPassword , 
-    authCallback, updateProfile, getProfile, followUnfollowUser 
+    authCallback, updateProfile, getProfile, followUnfollowUser  , deleteAccount
 }
