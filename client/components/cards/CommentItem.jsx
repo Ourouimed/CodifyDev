@@ -1,15 +1,31 @@
+import { useToast } from "@/hooks/useToast";
+import { likeComment, toggleLikeComment } from "@/store/features/posts/postSlice";
 import { formatDistanceToNowStrict } from "date-fns";
 import { Heart, MessageCircle, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useDispatch } from "react-redux";
 
 const CommentItem = ({ comment: c }) => {
   const timeAgo = formatDistanceToNowStrict(new Date(c.createdAt), {
     addSuffix: true,
   });
+  const dispatch = useDispatch()
+  const toast = useToast()
+
+
+  const handleLike = async () => {
+        try {
+            dispatch(toggleLikeComment(c._id));
+            await dispatch(likeComment(c._id)).unwrap();
+        } catch (err) {
+            toast.error('Failed to update like');
+        }
+    };
+
 
   return (
-    <div className="group flex flex-col gap-3 py-4 transition-all">
+    <div className="group flex flex-col gap-3 py-4 transition-all" id={`comment-${c._id}`}>
       <div className="flex gap-3">
         <div className="flex flex-col items-center">
           <Link 
@@ -64,19 +80,30 @@ const CommentItem = ({ comment: c }) => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-5 mt-3">
-            <button className="flex items-center gap-1.5 group/btn cursor-pointer text-muted-foreground hover:text-red-500 transition-colors">
-              <div className="p-1.5 rounded-full group-hover/btn:bg-red-500/10 transition-colors">
-                <Heart className="size-[17px] transition-transform active:scale-125" />
-              </div>
-              <span className="text-xs font-medium">0</span>
-            </button>
+            <button 
+                        onClick={handleLike} 
+                        className="flex items-center gap-1.5 group cursor-pointer transition-colors"
+                    >
+                        <Heart 
+                            className={`w-[18px] h-[18px] transition-all duration-300 ${
+                                c.isLiked 
+                                    ? 'fill-red-500 text-red-500 scale-110' 
+                                    : 'group-hover:text-red-500'
+                            }`} 
+                        />
+                        <span className={`text-sm transition-colors ${
+                            c.isLiked ? 'text-red-500 font-bold' : 'text-muted-foreground'
+                        }`}>
+                            {c.likeCount || 0}
+                        </span>
+                    </button>
 
-            <button className="flex items-center gap-1.5 group/btn cursor-pointer text-muted-foreground hover:text-primary transition-colors">
-              <div className="p-1.5 rounded-full group-hover/btn:bg-primary/10 transition-colors">
-                <MessageCircle className="size-[17px]" />
-              </div>
-              <span className="text-xs font-medium">0</span>
-            </button>
+                    
+                        <button className="flex items-center gap-1.5 group cursor-pointer text-muted-foreground hover:text-primary transition-colors">
+                            <MessageCircle className="w-[18px] h-[18px]" />
+                            <span className="text-sm">{c.comments?.length || 0}</span>
+                        </button>
+
           </div>
         </div>
       </div>

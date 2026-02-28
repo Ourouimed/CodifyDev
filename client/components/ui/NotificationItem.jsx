@@ -12,15 +12,18 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
     type,
     post,
     sender,
-    content,
+    message,
+    comment , 
     createdAt,
     isRead,
   } = notification;
 
+  console.log(comment)
+
   const href =
-    type === "like" || type === "comment"
-      ? `/feed/post/${post}`
-      : `/profile/${sender?.username}`;
+    type === "like" ? `/feed/post/${post}` :
+    type === "comment" || type === 'comment_like' ? `/feed/post/${post}#comment-${comment}`
+    : `/profile/${sender?.username}`;
 
   const timeAgo = createdAt
     ? formatDistanceToNowStrict(new Date(createdAt), {
@@ -59,7 +62,7 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
           )}
         </div>
 
-        {/* Content */}
+        {/* message */}
         <div className="flex items-center justify-between w-full gap-2">
           <div className="flex-1 min-w-0">
             <p className="text-sm leading-snug">
@@ -67,11 +70,12 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
                 {sender?.displayName || "Someone"}
               </span>{" "}
               {type === "like" && "liked your post"}
+              {type === "comment_like" && "liked your comment"}
               {type === "comment" && (
                 <>
                   commented:{" "}
                   <span className="italic truncate block">
-                    "{content}"
+                    "{message}"
                   </span>
                 </>
               )}

@@ -31,6 +31,18 @@ export const likePost = createAsyncThunk('posts/like' , async (postId , thunkAPI
 })
 
 
+
+
+export const likeComment = createAsyncThunk('comments/like' , async (postId , thunkAPI)=>{
+    try {
+        return await postService.likeComment(postId)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
+ 
 export const getAllPosts = createAsyncThunk('posts/getAll' , async (post , thunkAPI)=>{
     try {
         return await postService.getAll()
@@ -91,20 +103,21 @@ export const postSlice = createSlice({
     reducers : {
         toggleLikePost : (state , action)=>{
             const postId = action.payload
-            const postIndex = state.posts.findIndex(post => post._id === postId)    
-            if (postIndex !== -1){
-                const post = state.posts[postIndex] 
-                if (post.isLiked){
-                    post.likes = post.likes.filter(id => id !== postId)
-                    post.likeCount -= 1
-                }       
-                else {
-                    post.likes.push(postId)
-                    post.likeCount += 1
-                }
-                post.isLiked = !post.isLiked
-            }   
+            const post = state.posts.find(post => post._id === postId)    
+            if (post.isLiked) post.likeCount --   
+            else post.likeCount ++
+            post.isLiked = !post.isLiked
         }, 
+
+        toggleLikeComment : (state , action)=>{
+            const commentId = action.payload
+            const post = state.posts.find(p => p.comments.some(c => c._id === commentId))
+            const comment = post.comments.find(c => c._id === commentId)
+            if (comment.isLiked) comment.likeCount --   
+            else comment.likeCount ++
+            comment.isLiked = !comment.isLiked
+        },
+
         updateFollowStatus : (state , action) => {
             const { username , isFollowing } = action.payload
             state.posts = state.posts.map(post => {
@@ -232,5 +245,5 @@ export const postSlice = createSlice({
     }) 
 })
 
-export const { toggleLikePost , updateFollowStatus } = postSlice.actions
+export const { toggleLikePost , toggleLikeComment , updateFollowStatus } = postSlice.actions
 export default postSlice.reducer

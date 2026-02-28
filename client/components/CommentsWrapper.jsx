@@ -28,7 +28,7 @@ const CommentsWrapper = ({postId , comments})=>{
         }
     }
     return <div className='space-y-2'>
-        <h3 className="font-semibold text-2xl">Comments ({comments.length})</h3>
+        <h3 className="font-semibold text-2xl" id='comments'>Comments ({comments.length})</h3>
         <div className="border border-border rounded-xl p-4 shadow-sm transition-all">
                         <TextareaAutosize
                             placeholder="Share your thoughts..."

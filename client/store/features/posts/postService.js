@@ -24,6 +24,12 @@ const likePost = async (postId) => {
     return response.data
 }
 
+
+const likeComment = async (commentId) => {
+    const response = await axiosService.post(`/api/posts/comments/like/${commentId}`)
+    return response.data
+}
+
 const getSinglePost = async (postId) => {
     const response = await axiosService.get(`/api/posts/post/${postId}`);
     return response.data; 
@@ -48,5 +54,6 @@ const addComment = async (postId , comment) => {
 
 
 const postService = {createPost , getAll , likePost, deletePost , addComment ,
+                    likeComment , 
                         getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService

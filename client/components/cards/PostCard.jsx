@@ -314,11 +314,11 @@ const PostCard = ({ post, isExpandedText }) => {
                         <span className={`text-sm transition-colors ${
                             post.isLiked ? 'text-red-500 font-bold' : 'text-muted-foreground'
                         }`}>
-                            {post.likes.length || 0}
+                            {post.likeCount || 0}
                         </span>
                     </button>
 
-                    <Link href={`/feed/post/${post._id}`}>
+                    <Link href={`/feed/post/${post._id}#comments`}>
                         <button className="flex items-center gap-1.5 group cursor-pointer text-muted-foreground hover:text-primary transition-colors">
                             <MessageCircle className="w-[18px] h-[18px]" />
                             <span className="text-sm">{post.comments?.length || 0}</span>
