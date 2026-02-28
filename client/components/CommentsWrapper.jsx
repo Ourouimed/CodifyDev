@@ -9,10 +9,10 @@ import { usePosts } from '@/hooks/usePosts';
 import CommentItem from './cards/CommentItem';
 const CommentsWrapper = ({postId , comments})=>{
     const [newComment , setNewComment] = useState('')
-    
     const toast = useToast() 
     const { isLoading } = usePosts() 
     const dispatch = useDispatch()
+    const [openedCmnt , setOpenedCmnt] = useState(null)
     const isDisabled = newComment.length <= 0 || newComment.length > 200 || isLoading
 
 
@@ -65,7 +65,7 @@ const CommentsWrapper = ({postId , comments})=>{
                 </div>
             ) : (
                 <div className='divide-y divide-border/60'>
-                    {[...comments].reverse().map((c) => <CommentItem key={c._id} comment={c}/>)}
+                    {[...comments].reverse().map((c) => <CommentItem key={c._id} openedCmnt={openedCmnt} setOpenedCmnt={setOpenedCmnt} comment={c}/>)}
                 </div>
             )}
     </div>

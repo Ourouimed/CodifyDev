@@ -48,12 +48,22 @@ const deletePost = async (postId) => {
 
 
 const addComment = async (postId , comment) => {
-    const response = await axiosService.post(`/api/posts/comments/add/${postId}` , {comment});
+    const response = await axiosService.post(`/api/posts/comments/add/${postId}` , {content : comment});
     return response.data;
 };
 
 
+
+const addReply = async (commentId , reply) => {
+    const response = await axiosService.post(`/api/posts/comments/reply/add/${commentId}` , {reply});
+    return response.data;
+};
+
+
+
+
+
 const postService = {createPost , getAll , likePost, deletePost , addComment ,
-                    likeComment , 
+                    likeComment , addReply ,
                         getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService

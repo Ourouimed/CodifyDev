@@ -92,6 +92,17 @@ export const addComment = createAsyncThunk('posts/comments/add' , async (data , 
     }
 })
 
+
+
+export const addReply = createAsyncThunk('posts/comments/addReply' , async (data , thunkAPI)=>{
+    try {
+        return await postService.addReply(data.commentId , data.reply)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const postSlice = createSlice({
     name : 'post',
     initialState : {
@@ -241,6 +252,24 @@ export const postSlice = createSlice({
         }
     })
     .addCase(addComment.rejected, (state) => {
+        state.isLoading = false;
+    }) 
+
+
+    // add reply
+    .addCase(addReply.pending, (state) => {
+        state.isLoading = true;
+    })
+    .addCase(addReply.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const index = state.posts.findIndex(p => p._id === action.payload.post._id);
+        if (index !== -1) {
+            state.posts[index] = action.payload.post;
+        } else {
+            state.posts.push(action.payload.post);
+        }
+    })
+    .addCase(addReply.rejected, (state) => {
         state.isLoading = false;
     }) 
 })
