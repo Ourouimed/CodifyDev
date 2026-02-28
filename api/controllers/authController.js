@@ -5,7 +5,6 @@ import dotenv from "dotenv";
 import jwt from 'jsonwebtoken'
 import { uploadImage } from "../lib/upload-image.js";
 import Notification from "../models/Notification.js"
-import mongoose from "mongoose";
 
 
 dotenv.config()

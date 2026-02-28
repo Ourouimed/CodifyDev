@@ -1,7 +1,8 @@
 import express from 'express'
 import verifyJWT from '../middlewares/verifyJWT.js'
 import multer from 'multer'
-import { createPost, getAllPosts , getPostById , likePost , getFollowingPosts, getPostsByAuthor, deletePost} from '../controllers/postController.js'
+import { createPost, getAllPosts , getPostById , likePost ,
+     getFollowingPosts, getPostsByAuthor, deletePost , addComment} from '../controllers/postController.js'
 const router = express.Router()
 
 
@@ -11,6 +12,8 @@ const upload = multer({ storage });
 router.post('/create' , verifyJWT , upload.array('post-images', 10) , createPost)
 router.post('/like/:postId' , verifyJWT , likePost)
 router.delete('/delete/:postId' , verifyJWT , deletePost)
+router.post('/comments/add/:postId' , verifyJWT , addComment)
+
 
 router.get('/' , verifyJWT , getAllPosts)
 router.get('/following' , verifyJWT , getFollowingPosts)

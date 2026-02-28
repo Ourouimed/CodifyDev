@@ -61,7 +61,7 @@ const getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find()
             .populate('author', 'username avatar displayName followers') 
-            .populate('comments.author', 'username')
+            .populate('comments.author', 'username avatar displayNamee')
             .sort({ createdAt: -1 }).
             lean();
 
@@ -70,8 +70,7 @@ const getAllPosts = async (req, res) => {
                 ...post,
                 isLiked: req.user?.id 
                     ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
-                    : false,
-                likeCount: post.likes.length , 
+                    : false, 
                 isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
             };
         });
@@ -90,7 +89,7 @@ const getFollowingPosts = async (req, res) => {
         const user = await User.findById(req.user.id).select('following').lean();
         const posts = await Post.find({ author: { $in: user.following } })
             .populate('author', 'username avatar displayName followers') 
-            .populate('comments.author', 'username')
+            .populate('comments.author', 'username avatar displayName')
             .sort({ createdAt: -1 }).
             lean();
         const processedPosts = posts.map(post => {
@@ -98,8 +97,7 @@ const getFollowingPosts = async (req, res) => {
                 ...post,
                 isLiked: req.user?.id 
                     ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
-                    : false,
-                likeCount: post.likes.length , 
+                    : false, 
                 isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
             };
         });
@@ -120,7 +118,7 @@ const getPostsByAuthor = async (req, res) => {
         const author = await User.findOne({username}).select('_id')
         const posts = await Post.find({ author: author._id })
             .populate('author', 'username avatar displayName followers') 
-            .populate('comments.author', 'username')
+            .populate('comments.author', 'username avatar displayName')
             .sort({ createdAt: -1 }).
             lean();
         const processedPosts = posts.map(post => {
@@ -128,8 +126,7 @@ const getPostsByAuthor = async (req, res) => {
                 ...post,
                 isLiked: req.user?.id 
                     ? post.likes.some(id => id.toString() === req.user?.id.toString()) 
-                    : false,
-                likeCount: post.likes.length , 
+                    : false, 
                 isFollowing : req.user?.id ? post.author.followers.some(followerId => followerId.toString() === req.user.id.toString()) : false,
             };
         });
@@ -149,7 +146,7 @@ const getPostById = async (req, res) => {
         const { postId } = req.params;
         const post = await Post.findById(postId)
             .populate('author', 'username avatar displayName') 
-            .populate('comments.author', 'username')
+            .populate('comments.author', 'username avatar displayName')
             .sort({ createdAt: -1 }).
             lean();
 
@@ -222,6 +219,7 @@ const likePost = async (req, res) => {
 }
 
 
+
 const deletePost = async (req, res) => {
     try {
         const { postId } = req.params
@@ -243,4 +241,52 @@ const deletePost = async (req, res) => {
         });
     }
 }
-export { createPost , getAllPosts , getPostById , likePost , getFollowingPosts , getPostsByAuthor , deletePost}
+
+
+const addComment = async (req , res)=>{
+    try {
+        const userId = req.user.id 
+        const {postId} = req.params 
+        const { comment } = req.body 
+
+        if (!postId || !comment){
+            return res.status(400).json({error : 'Some required fields are missing'})
+        }
+
+        const post = await Post.findByIdAndUpdate(postId , {
+            $push : {
+                comments : {
+                    author : userId  ,
+                    content : comment
+                }
+            }
+        } , 
+        { new : true})
+        .populate('author', 'username avatar displayName') 
+        .populate('comments.author','username avatar displayName')
+        .lean()
+
+
+
+
+        const processedPost = {
+            ...post,
+            isLiked: userId 
+                ? post.likes.some(id => id.toString() === userId.toString()) 
+                    : false,
+            }; 
+
+
+        return res.json({message : 'Post published ' , post : processedPost})
+        
+    }
+
+    catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            error: 'Internal server error'
+        });
+    }
+}
+export { createPost , getAllPosts , getPostById 
+    , likePost , getFollowingPosts , getPostsByAuthor , addComment , deletePost}
