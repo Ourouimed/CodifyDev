@@ -6,6 +6,7 @@ import { getSinglePost } from "@/store/features/posts/postSlice"
 import FeedLayout from "@/app/FeedLayout"
 import PostCard from "@/components/cards/PostCard"
 import { Loader2 } from "lucide-react"
+import CommentsWrapper from "@/components/CommentsWrapper"
 
 const PostPage = () => {
     const { postId } = useParams()
@@ -26,9 +27,10 @@ const PostPage = () => {
                     <div className="flex items-center justify-center h-64">
                         <Loader2 className="animate-spin h-8 w-8 text-primary"/>
                     </div>
-                ) : post ? (
-                    <PostCard post={post} isExpandedText={true}/>
-                ) : (
+                ) : post ? <div className="space-y-3">
+                                <PostCard post={post} isExpandedText={true}/>
+                                <CommentsWrapper postId={post._id} comments={post?.comments || []}/>
+                            </div> : (
                     <div className="text-center py-10 text-muted-foreground">
                         Post not found.
                     </div>

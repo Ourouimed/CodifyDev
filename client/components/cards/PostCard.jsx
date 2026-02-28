@@ -204,7 +204,7 @@ const PostCard = ({ post, isExpandedText }) => {
                                 {post.author?.displayName || post.author?.username}
                             </h3>
                         </Link>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs">
                             @{post.author?.username} · {timeAgo}
                         </span>
                     </div>
@@ -308,13 +308,13 @@ const PostCard = ({ post, isExpandedText }) => {
                             className={`w-[18px] h-[18px] transition-all duration-300 ${
                                 post.isLiked 
                                     ? 'fill-red-500 text-red-500 scale-110' 
-                                    : 'text-muted-foreground group-hover:text-red-500'
+                                    : 'group-hover:text-red-500'
                             }`} 
                         />
                         <span className={`text-sm transition-colors ${
                             post.isLiked ? 'text-red-500 font-bold' : 'text-muted-foreground'
                         }`}>
-                            {post.likeCount || 0}
+                            {post.likes.length || 0}
                         </span>
                     </button>
 

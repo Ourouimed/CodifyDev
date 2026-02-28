@@ -41,6 +41,12 @@ const deletePost = async (postId) => {
 };
 
 
-const postService = {createPost , getAll , likePost, deletePost ,
+const addComment = async (postId , comment) => {
+    const response = await axiosService.post(`/api/posts/comments/add/${postId}` , {comment});
+    return response.data;
+};
+
+
+const postService = {createPost , getAll , likePost, deletePost , addComment ,
                         getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService
