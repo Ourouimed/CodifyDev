@@ -1,4 +1,4 @@
-import { Github, Loader2, Lock, Mail } from "lucide-react"
+import { Github, Loader2, Lock, Mail, Terminal } from "lucide-react"
 import { Button } from "./ui/Button"
 import { Input } from "./ui/Input"
 import { Divider } from "./ui/Divider"
@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/useToast"
 import { GithubAuthBtn } from "./ui/GithubAuthBtn"
 import { GoogleAuthBtn } from "./ui/GoogleAuthBtn"
 
-const LoginForm = ()=>{
+const LoginForm = ({goToRegister})=>{
     const dispatch = useDispatch()
     const toast = useToast()
     const { isLoading } = useAuth()
@@ -55,11 +55,20 @@ const LoginForm = ()=>{
         const { id , value } = e.target
         setLoginForm(prev => ({...prev , [id] : value}))
     }
-    return <div className="space-y-4">
-        <h2 className="font-semibold text-xl">Welcome back</h2>
+    return <div className="space-y-4 border border-border rounded-lg shadow-xl p-5 w-md">
+        <div className="flex justify-center flex-col items-center gap-1">
+            <div className="bg-primary/30 size-16 rounded-full flex justify-center items-center">
+                <Terminal className="text-primary font-bold size-8"/>
+            </div>
+            <h2 className="font-bold text-2xl">Welcome back</h2>
+            <p className="text-sm text-gray-500">
+                Enter your email to sign in to your account
+            </p>
+        </div>
+        
 
         <div className="space-y-2">
-            <label className="text-xs uppercase" htmlFor="email">
+            <label className="text-xs font-semibold" htmlFor="email">
                 Email
             </label>
             <Input id='email' placeholder="example@email.com" value={loginForm.email} icon={Mail} onChange={handleChange}/>
@@ -69,7 +78,7 @@ const LoginForm = ()=>{
 
 
         <div className="space-y-2">
-            <label className="text-xs uppercase" htmlFor='password'>
+            <label className="text-xs font-semibold" htmlFor='password'>
                 Password
             </label>
             <Input id='password' placeholder='password' value={loginForm.password} icon={Lock} onChange={handleChange}/>
@@ -89,10 +98,13 @@ const LoginForm = ()=>{
         </Divider>
 
         {/* Social login*/}
-        <div className="space-y-2">    
+        <div className="gap-2 flex items-center ">    
             <GithubAuthBtn/>
             <GoogleAuthBtn variant='outline'/>
         </div>
+        <p className="mt-3 text-center text-sm">
+            Do not have an account ? <button className='text-primary cursor-pointer hover:underline' onClick={goToRegister}>Register</button>
+        </p>
     </div>
 }
 
