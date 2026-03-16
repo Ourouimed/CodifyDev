@@ -16,7 +16,6 @@ const buildCommentTree = (allComments, userId, pId = null) => {
             ...c,
             likeCount: c.likes?.length || 0,
             isLiked: userId ? c.likes?.some(id => id.toString() === userId.toString()) : false,
-            // RECURSION: Find all replies where this comment is the parent
             replies: buildCommentTree(allComments, userId, c._id)
         }));
 };
@@ -158,8 +157,7 @@ const addComment = async (req, res) => {
             parentId: null
         });
 
-        console.log(newComment)
-
+        
         const post = await Post.findByIdAndUpdate(
             postId,
             { $inc: { commentCount: 1 } },
@@ -221,6 +219,7 @@ const addReply = async (req, res) => {
         const allComments = await Comment.find({ postId: post._id }).populate('author', 'username avatar displayName').lean();
         return res.json({ post: processedPost(post, allComments, userId) });
     } catch (err) {
+        console.log(err)
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
