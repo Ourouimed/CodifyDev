@@ -37,6 +37,16 @@ const CommentItem = ({ comment: c }) => {
     }
   };
 
+
+  const handleLike = async () => {
+          try {
+              dispatch(toggleLikeComment(c._id));
+              await dispatch(likeComment(c._id)).unwrap();
+          } catch (err) {
+              console.log(err)
+              toast.error('Failed to update like');
+          }
+      };
   return (
     <div className="flex flex-col w-full" id={`comment-${c._id}`}>
       <div className="flex gap-3">
@@ -77,7 +87,7 @@ const CommentItem = ({ comment: c }) => {
           </p>
 
           <div className="flex items-center gap-5 mt-2">
-            <button onClick={() => dispatch(toggleLikeComment(c._id))} className="flex items-center gap-1.5 group cursor-pointer">
+            <button onClick={handleLike} className="flex items-center gap-1.5 group cursor-pointer">
               <Heart className={`size-4 transition-colors ${c.isLiked ? 'fill-red-500 text-red-500' : 'text-muted-foreground group-hover:text-red-500'}`} />
               <span className="text-xs text-muted-foreground">{c.likeCount || 0}</span>
             </button>

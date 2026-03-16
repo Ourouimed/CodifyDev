@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from './ui/Button';
-import { Loader2, MessageCircle, SendHorizonal } from 'lucide-react';
+import { Loader2, MessageCircle, SendHorizonal, Smile } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { useDispatch } from 'react-redux';
 import { addComment } from '@/store/features/posts/postSlice';
 import { usePosts } from '@/hooks/usePosts';
 import CommentItem from './cards/CommentItem';
+import EmojiPicker from './EmpojiPicker';
 const CommentsWrapper = ({postId , comments})=>{
+    const [showPicker, setShowPicker] = useState(false);
     const [newComment , setNewComment] = useState('')
     const toast = useToast() 
     const { isLoading } = usePosts() 
@@ -38,17 +40,30 @@ const CommentsWrapper = ({postId , comments})=>{
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                         />
-                        <div className='flex justify-end items-center gap-3 '>
-                                <span className={`text-xs font-mono ${newComment.length > 200 && 'text-red-500'}`}>
-                                    {newComment.length}/200   
-                                </span>
-                                <Button variant='primary' className={`h-8 py-0 px-3 text-xs gap-1.5 ${isDisabled && 'opacity-50'}`}
-                                    disabled={isDisabled} 
-                                    onClick={handleAddComment}>
-                                        {isLoading && <Loader2 className='animate-spin'/>}
-                                        {isLoading ? 'Commenting...' : 'Comment'}
-                                        <SendHorizonal className='size-4'/>
-                                </Button>
+                        <div className='flex justify-between items-center'>
+                            <div className="relative">
+                                    <button 
+                                        onClick={()=> setShowPicker(!showPicker)}
+                                        className={`hover:bg-primary/20 size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300`}>
+                                        <Smile size={20}/>
+                                    </button>
+                                    {showPicker && <EmojiPicker onSelect={(e)=>{
+                                        setNewComment(prev => prev + e.emoji)
+                                    }}/>}
+                                </div>
+                                <div className='gap-3 flex items-center'>
+                                    <span className={`text-xs font-mono ${newComment.length > 200 && 'text-red-500'}`}>
+                                        {newComment.length}/200   
+                                    </span>
+                                    <Button variant='primary' className={`h-8 py-0 px-3 text-xs gap-1.5 ${isDisabled && 'opacity-50'}`}
+                                        disabled={isDisabled} 
+                                        onClick={handleAddComment}>
+                                            {isLoading && <Loader2 className='animate-spin'/>}
+                                            {isLoading ? 'Commenting...' : 'Comment'}
+                                            <SendHorizonal className='size-4'/>
+                                    </Button>
+                                </div>
+                                
                         </div>
         </div>
 

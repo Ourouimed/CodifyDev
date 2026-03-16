@@ -2,17 +2,20 @@ import { Button } from "@/components/ui/Button"
 import { usePosts } from "@/hooks/usePosts";
 import { useToast } from "@/hooks/useToast";
 import { createPost } from "@/store/features/posts/postSlice";
-import { Image, Link, Loader2, Plus, Send, Vote, X } from "lucide-react";
+import { Image, Link, Loader2, Plus, Send, Smile, Vote, X } from "lucide-react";
 import { useEffect, useState , useRef} from "react";
 import { useDispatch } from "react-redux";
 import TextareaAutosize from 'react-textarea-autosize';
+import EmojiPicker from "./EmpojiPicker";
 
 
 
 const CreatePostArea = () => {
     const [content, setContent] = useState('')
     const [selectedFiles, setSelectedFiles] = useState([])
-    const [previews, setPreviews] = useState([])
+    const [previews, setPreviews] = useState([])    
+    // emoji picker state 
+    const [showPicker, setShowPicker] = useState(false);
     const dispatch = useDispatch()
     const toast = useToast()
     const { isPosting } = usePosts()
@@ -77,6 +80,7 @@ const CreatePostArea = () => {
             }
         }
 
+
     const isDisabled = isPosting || (content.trim().length === 0 && selectedFiles.length === 0)
     return <div className="border border-border rounded-xl p-4 shadow-sm bg-card transition-all">
                         <TextareaAutosize
@@ -139,16 +143,20 @@ const CreatePostArea = () => {
                                 <button 
                                     disabled={selectedFiles.length >= 10}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className={`cursor-pointer transition-colors ${selectedFiles.length >= 10 ? 'opacity-30 cursor-not-allowed' : 'hover:text-primary text-muted-foreground'}`}
+                                    className={`hover:bg-primary/20 size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300`}
                                 >
                                     <Image size={20} /> 
                                 </button>
-                                <button type="button" className="hover:text-primary transition-colors text-muted-foreground">
-                                    <Link size={20} />
-                                </button>
-                                <button type="button" className="hover:text-primary transition-colors text-muted-foreground">
-                                    <Vote size={20} />
-                                </button>
+                                <div className="relative">
+                                    <button 
+                                        onClick={()=> setShowPicker(!showPicker)}
+                                        className={`hover:bg-primary/20 size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300`}>
+                                        <Smile size={20}/>
+                                    </button>
+                                    {showPicker && <EmojiPicker onSelect={(e)=>{
+                                        setContent(prev => prev + e.emoji)
+                                    }}/>}
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-4 flex-wrap">

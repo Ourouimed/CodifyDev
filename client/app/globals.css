@@ -28,9 +28,25 @@
     --border : #29292a;
   }
 }
-
+@font-face {
+  font-family: "FlagEmoji";
+  src: url("https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.3/dist/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+}
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Poppins', sans-serif;
+  font-family: 'FlagEmoji' , 'Poppins', sans-serif;
+}
+
+::-webkit-scrollbar {
+ @apply size-1 bg-background;
+}
+
+::-webkit-scrollbar-thumb {
+ @apply bg-primary rounded-full
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-background
 }

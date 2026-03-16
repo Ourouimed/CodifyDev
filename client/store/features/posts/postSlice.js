@@ -120,13 +120,34 @@ export const postSlice = createSlice({
             post.isLiked = !post.isLiked
         }, 
 
-        toggleLikeComment : (state , action)=>{
-            const commentId = action.payload
-            const post = state.posts.find(p => p.comments.some(c => c._id === commentId))
-            const comment = post.comments.find(c => c._id === commentId)
-            if (comment.isLiked) comment.likeCount --   
-            else comment.likeCount ++
-            comment.isLiked = !comment.isLiked
+        toggleLikeComment: (state, action) => {
+        const commentId = action.payload
+            const toggleLikeRecursive = (comments) => {
+                for (let comment of comments) {
+
+                    if (comment._id === commentId) {
+                        if (comment.isLiked) comment.likeCount--
+                        else comment.likeCount++
+
+                        comment.isLiked = !comment.isLiked
+                        return true
+                    }
+
+                    // check replies recursively
+                    if (comment.replies && comment.replies.length > 0) {
+                        const found = toggleLikeRecursive(comment.replies)
+                        if (found) return true
+                    }
+                }
+
+                return false
+            }
+
+            state.posts.forEach(post => {
+                if (post.comments) {
+                    toggleLikeRecursive(post.comments)
+                }
+            })
         },
 
         updateFollowStatus : (state , action) => {
