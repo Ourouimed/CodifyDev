@@ -16,6 +16,7 @@ import { likePost, toggleLikePost, updateFollowStatus } from "@/store/features/p
 import { followUnfollow } from "@/services/followUnfollow";
 import { useAuth } from "@/hooks/useAuth";
 import { usePopup } from "@/hooks/usePopup";
+import { CodeEditor } from "../CodeEditor";
 
 const PostCard = ({ post, isExpandedText }) => { 
     const [isExpanded, setIsExpanded] = useState(isExpandedText || false);
@@ -294,6 +295,11 @@ const PostCard = ({ post, isExpandedText }) => {
                 )}
             </div>
 
+            {post?.codeEditor?.code && <CodeEditor
+                        code={post.codeEditor?.code}
+                        language={post.codeEditor?.codeLanguage}
+                        isEditingMode={false}
+                      />}
             {/* Slideshow Content */}
             {renderSlideshow()}
 
