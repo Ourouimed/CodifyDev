@@ -74,6 +74,7 @@ const CreatePostArea = () => {
                 await dispatch(createPost(formData)).unwrap()
                 toast.success('Post created successfully')
                 setContent('')
+                setShowPicker(false)
                 setSelectedFiles([])
             } catch (err) {
                 toast.error(err || 'Failed to create post')

@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Poppins } from "next/font/google";
+import { Geist, Geist_Mono, Poppins , Fira_Code} from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/providers/ReduxProvider";
 import { ToastList } from "@/components/ui/ToastList";
@@ -10,15 +10,16 @@ const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
   variable: '--font-poppins',
 }) 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+
+const fira = Fira_Code({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-code',
+}) 
+
+
+
 
 export const metadata = {
   title: "CodifyDev community",
@@ -29,7 +30,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable}  antialiased bg-bgsecondary`}
+        className={`${fira.variable}  font-fira antialiased bg-bgsecondary`}
       >
         <ReduxProvider>
             <ToastList/>
