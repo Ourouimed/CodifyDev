@@ -11,13 +11,15 @@ const ProfilePosts = ({username})=>{
     useEffect( ()=>{
         dispatch(getPostsByAuthor(username))
     }, [dispatch])
-    return<div className="space-y-4">
+    return<div>
                         {isLoading && posts.length === 0 ? (
                             <div className="flex justify-center p-10">
                                 <Loader2 className="animate-spin text-primary" size={40} />
                             </div>
                         ) : posts.length > 0 ? (
-                            posts.map((post) => <PostCard key={post._id} post={post} />)
+                            <div className="grid grid-cols md:grid-cols-2 gap-2">
+                                {posts.map((post) => <PostCard key={post._id} post={post} />)}
+                            </div>
                         ) : (
                             <div className="text-center p-10 text-muted-foreground bg-card rounded-xl border border-dashed border-border">
                                 No posts found

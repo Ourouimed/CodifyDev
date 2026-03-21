@@ -14,7 +14,7 @@ import ProfilePosts from "@/components/ProfilePosts"
 const ProfilePage = () => {
     const [profile, setProfile] = useState(null)
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState('repos') 
+    const [activeTab, setActiveTab] = useState('posts') 
     const { userId } = useParams()
     const { user: currentUser } = useAuth()
 
@@ -79,23 +79,11 @@ const ProfilePage = () => {
                 />
 
                 {/* Tab Switcher */}
-                <div className="flex border-b border-border mt-6 bg-background/50 backdrop-blur-sm sticky top-0 z-10">
-                    <button
-                        onClick={() => setActiveTab('repos')}
-                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
-                            activeTab === 'repos' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
-                        }`}
-                    >
-                        <Code2 className="w-4 h-4" />
-                        Repositories
-                        {activeTab === 'repos' && (
-                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
-                        )}
-                    </button>
+                <div className="flex border-b mt-6 border-border bg-background/50 backdrop-blur-sm sticky top-0 z-10">
                     <button
                         onClick={() => setActiveTab('posts')}
-                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
-                            activeTab === 'posts' ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                        className={`flex cursor-pointer items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
+                            activeTab === 'posts' ? 'text-primary' : ''
                         }`}
                     >
                         <BookText className="w-4 h-4" />
@@ -104,6 +92,19 @@ const ProfilePage = () => {
                             <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
                         )}
                     </button>
+                    <button
+                        onClick={() => setActiveTab('repos')}
+                        className={`flex cursor-pointer items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative ${
+                            activeTab === 'repos' ? 'text-primary' : ''
+                        }`}
+                    >
+                        <Code2 className="w-4 h-4" />
+                        Repositories
+                        {activeTab === 'repos' && (
+                            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary" />
+                        )}
+                    </button>
+                    
                 </div>
 
                 {/*Tab Content Container */}

@@ -8,12 +8,18 @@ import Link from "next/link"
 import axiosService from "@/lib/axiosService"
 import NotificationDropdown from "./NotificationDropdown"
 import { getNotifications } from "@/services/getNotifications"
+import { useParams, useSearchParams } from "next/navigation"
+import c from "highlight.js/lib/languages/c"
 
 const Header = ({ user, onLogout }) => {
     const [profileIsOpen, setProfileIsOpen] = useState(false)
     const [notifIsOpen, setNotifIsOpen] = useState(false)
 
     const [notifications, setNotifications] = useState([])
+
+    const searchParam = useSearchParams()
+    const searchQuery = searchParam.get('q')
+    const [search , setSearch] = useState("" || searchQuery)
     useEffect(()=>{
         const fetchNotifications = async () => {
             try {
@@ -57,6 +63,8 @@ const Header = ({ user, onLogout }) => {
     }
     
     const unreadCount = notifications.filter(notif => !notif.isRead).length
+
+
     return (
         <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border px-3 md:px-10 py-3 flex items-center justify-between">
             
@@ -73,7 +81,10 @@ const Header = ({ user, onLogout }) => {
 
 
                 <div className="hidden md:block w-72">
-                    <Input placeholder='Search projects, devs...' icon={Search}/>
+                    <form action={`/search`}>
+                        <Input name="q" placeholder='Search posts, devs...' icon={Search} value={search || ""} onChange={e=> setSearch(e.target.value)}/>
+                    </form>
+                    
                 </div>
             </div>
 
