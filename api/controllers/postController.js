@@ -22,16 +22,20 @@ const buildCommentTree = (allComments, userId, pId = null) => {
 
 const processedPost = (post, allComments, userId) => {
     if (!post) return null;
+
     const commentTree = buildCommentTree(allComments || [], userId);
-    
+
     return {
         ...post,
-        isLiked: userId ? post.likes?.some(id => id.toString() === userId.toString()) : false,
-        isFollowing: userId && post.author?.followers 
-            ? post.author.followers.some(id => id.toString() === userId.toString()) 
+        codeEditor: post.codeEditor || null,
+        isLiked: userId
+            ? post.likes?.some(id => id.toString() === userId.toString())
+            : false,
+        isFollowing: userId && post.author?.followers
+            ? post.author.followers.some(id => id.toString() === userId.toString())
             : false,
         likeCount: post.likes?.length || 0,
-        commentCount: post.commentCount || 0, 
+        commentCount: post.commentCount || 0,
         comments: commentTree
     };
 };
@@ -40,11 +44,11 @@ const processedPost = (post, allComments, userId) => {
 const createPost = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { content } = req.body;
+        const { content , code , codeLanguage} = req.body;
         const files = req.files || [];
 
-        if (!content && files.length === 0) {
-            return res.status(400).json({ error: 'Post must have text or an image!' });
+        if (!content && !code && files.length === 0) {
+            return res.status(400).json({ error: 'Post must have at least text , code snipet or an image!' });
         }
 
         const uploadPromises = files.map((file, index) => {
@@ -57,9 +61,15 @@ const createPost = async (req, res) => {
         const post = await Post.create({
             content,
             author: userId,
-            images: imageUrls 
-        });
-
+            images: imageUrls,
+            ...(code && {
+                codeEditor: {
+                    code,
+                    codeLanguage
+                }
+            })
+            });
+        
         const populated = await Post.findById(post._id).populate('author', 'username avatar displayName').lean();
         return res.json({ 
             message: 'Post created successfully', 
