@@ -11,6 +11,7 @@ import postRouter from './routes/post.js'
 import notificationRouter from './routes/notification.js'
 
 import './config/passport.js'
+import { fetchSearchRes } from './controllers/searchController.js';
 
 
 config()
@@ -36,6 +37,9 @@ app.get('/', (req, res) => {
 app.use('/api/auth' , authRouter)
 app.use('/api/posts' , postRouter)
 app.use('/api/notifications' , notificationRouter)
+
+// search endpoint 
+app.post('/api/search', fetchSearchRes);
 
 const startServer = async () => {
   console.log('Connecting server ...')
