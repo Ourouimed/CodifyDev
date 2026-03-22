@@ -180,6 +180,29 @@ const PostCard = ({ post, isExpandedText }) => {
         setIsOpen(false);
     }
 
+
+    const parseMentions = (text) => {
+        const parts = text.split(/(@[a-zA-Z0-9_.]+)/g);
+
+        return parts.map((part, i) => {
+            if (part.startsWith("@")) {
+                const username = part.slice(1);
+
+                return (
+                    <Link 
+                        key={i} 
+                        href={`/profile/${username}`}
+                        className="text-primary hover:underline font-semibold"
+                    >
+                        {part}
+                    </Link>
+                );
+            }
+
+            return part;
+        });
+    };
+
     return (
         <div className="p-4 rounded-xl border border-border space-y-3 bg-card transition-all hover:shadow-sm">
             {/* Header Section */}
@@ -276,7 +299,7 @@ const PostCard = ({ post, isExpandedText }) => {
 
             {/* Content Text Section */}
             <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                {displayedContent}
+                {parseMentions(displayedContent)}
                 {isLongPost && !isExpanded && (
                     <span 
                         className="text-primary hover:underline font-semibold cursor-pointer ml-1 text-xs" 

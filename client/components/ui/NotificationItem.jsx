@@ -21,8 +21,8 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
   console.log(comment)
 
   const href =
-    type === "like" ? `/feed/post/${post}` :
-    type === "comment" || type === 'comment_like' ? `/feed/post/${post}#comment-${comment}`
+    type === "like" || type === 'mention' ? `/feed/post/${post}` :
+    type === "comment" || type === 'comment_like'  ? `/feed/post/${post}#comment-${comment}`
     : `/profile/${sender?.username}`;
 
   const timeAgo = createdAt
@@ -70,6 +70,7 @@ const NotificationItem = ({ notification, onMarkAsRead }) => {
                 {sender?.displayName || "Someone"}
               </span>{" "}
               {type === "like" && "liked your post"}
+              {type === "mention" && "mentioned you in a post"}
               {type === "comment_like" && "liked your comment"}
               {type === "comment" && (
                 <>
