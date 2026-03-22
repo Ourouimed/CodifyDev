@@ -87,7 +87,6 @@ const getAllPosts = async (req, res) => {
             .populate('author', 'username avatar displayName followers') 
             .sort({ createdAt: -1 })
             .lean();
-        console.log(posts)
 
         const postIds = posts.map(p => p._id);
         const allComments = await Comment.find({ postId: { $in: postIds } })

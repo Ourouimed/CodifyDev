@@ -39,7 +39,7 @@ app.use('/api/posts' , postRouter)
 app.use('/api/notifications' , notificationRouter)
 
 // search endpoint 
-app.post('/api/search', fetchSearchRes);
+app.get('/api/search', fetchSearchRes);
 
 const startServer = async () => {
   console.log('Connecting server ...')
