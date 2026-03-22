@@ -1,10 +1,10 @@
 import { 
   Home, 
   Users, 
-  Code2, 
   Briefcase, 
   LayoutGrid, 
-  Calendar
+  Calendar,
+  Search
 } from "lucide-react";
 
 export const sideMenu = [
@@ -24,9 +24,9 @@ export const sideMenu = [
         name: "Communities"
     },
     {
-        url: '/snippets',
-        icon: Code2, 
-        name: "Code Snippets"
+        url: '/search',
+        icon: Search, 
+        name: "Search"
     },
 ];
 
