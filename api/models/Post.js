@@ -7,7 +7,8 @@ const PostSchema = new Schema({
     codeEditor : {
         code : {type : String , default : null} ,
         codeLanguage : {type : String , default : null}
-    }
+    },
+    mentions : [{ type: Schema.Types.ObjectId, ref: 'User' }]
 }, { timestamps: true });
 
 const Post = mongoose.model('Post', PostSchema);

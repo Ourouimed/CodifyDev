@@ -45,6 +45,19 @@ const createPost = async (req, res) => {
     try {
         const userId = req.user.id;
         const { content , code , codeLanguage} = req.body;
+        // extract mentioned users from content
+        const usernames = [...content.matchAll(/@([a-zA-Z0-9_.]+)/g)].map(m => m[1]);
+
+        // find users in DB
+        const mentionedUsers = await User.find({
+            username: { $in: usernames }
+        }).select('_id username');
+
+        const filteredUsers = mentionedUsers.filter(
+            u => u._id.toString() !== userId
+        );
+
+        const uniqueUserIds = [...new Set(filteredUsers.map(u => u._id.toString()))];
         const files = req.files || [];
 
         if (!content && !code && files.length === 0) {
@@ -67,15 +80,25 @@ const createPost = async (req, res) => {
                     code,
                     codeLanguage
                 }
-            })
+            }),
+            mentions : uniqueUserIds
             });
-        
+        await Notification.insertMany(
+            mentionedUsers.map(user => ({
+                recipient: user._id,
+                sender: userId,
+                type: 'mention',
+                post: post._id,
+                message: `mentioned you in a post`
+            }))
+        );
         const populated = await Post.findById(post._id).populate('author', 'username avatar displayName').lean();
         return res.json({ 
             message: 'Post created successfully', 
             post: processedPost(populated, [], userId) 
         });
     } catch (err) {
+        console.log(err)
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
