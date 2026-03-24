@@ -4,6 +4,7 @@ import { GlowBackground } from "@/components/GlowBackground"
 import Features from "@/components/sections/Features"
 import Hero from "@/components/sections/Hero"
 import { Button } from "@/components/ui/Button"
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 import { Code2 } from "lucide-react"
 import Link from "next/link"
 
@@ -19,6 +20,7 @@ const Home = ()=>{
                     </h3>
                 </Link>
                 <div className="flex items-center gap-2">
+                    <LanguageSwitcher/>
                     <Button href="/auth">Get started</Button>
                 </div>
         </header>

@@ -10,6 +10,7 @@ import NotificationDropdown from "./NotificationDropdown"
 import { getNotifications } from "@/services/getNotifications"
 import { useParams, useSearchParams } from "next/navigation"
 import c from "highlight.js/lib/languages/c"
+import LanguageSwitcher from "./ui/LanguageSwitcher"
 
 const Header = ({ user, onLogout }) => {
     const [profileIsOpen, setProfileIsOpen] = useState(false)
@@ -89,6 +90,7 @@ const Header = ({ user, onLogout }) => {
             </div>
 
             <div className="flex items-center gap-3">
+                <LanguageSwitcher/>
                 <div className="relative" ref={notificationRef}>
                     <Button variant="outline" className="!p-2 sm:flex relative" onClick={() => setNotifIsOpen(!notifIsOpen)}>
                         <Bell size={14}/>
