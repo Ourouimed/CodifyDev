@@ -1,37 +1,44 @@
-import { Button } from "@/components/ui/Button"
+import { Button } from "@/components/ui/Button";
 import { usePosts } from "@/hooks/usePosts";
 import { useToast } from "@/hooks/useToast";
 import { createPost } from "@/store/features/posts/postSlice";
-import { Check, Copy, Code, Image, Loader2, Plus, Send, Smile, X } from "lucide-react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { Code, Image, Loader2, Plus, Send, Smile, X, BarChart2} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import TextareaAutosize from 'react-textarea-autosize';
 import EmojiPicker from "./EmpojiPicker";
 import { CodeEditor } from "./CodeEditor";
-
+import PollOptions from "./PollOptions";
 
 const CreatePostArea = () => {
-  const [content,       setContent]       = useState('');
+  const [content, setContent] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [previews,      setPreviews]      = useState([]);
-  const [showPicker,    setShowPicker]    = useState(false);
+  const [previews, setPreviews] = useState([]);
+  const [showPicker, setShowPicker] = useState(false);
+  
   const [showCodeEditor, setShowCodeEditor] = useState(false);
-  const [code,          setCode]          = useState('');
-  const [codeLanguage,  setCodeLanguage]  = useState('javascript');
+  const [code, setCode] = useState('');
+  const [codeLanguage, setCodeLanguage] = useState('javascript');
 
-  const dispatch     = useDispatch();
-  const toast        = useToast();
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState(['', '']);
+  const [expiryDuration, setExpiryDuration] = useState('7'); 
+  const dispatch = useDispatch();
+  const toast = useToast();
   const { isPosting } = usePosts();
-  const fileInputRef  = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // Previews
   useEffect(() => {
-    if (!selectedFiles.length) { setPreviews([]); return; }
+    if (!selectedFiles.length) { 
+      setPreviews([]); 
+      return; 
+    }
     const urls = selectedFiles.map(f => URL.createObjectURL(f));
     setPreviews(urls);
     return () => urls.forEach(u => URL.revokeObjectURL(u));
   }, [selectedFiles]);
 
+  // --- Handlers ---
   const handleFileChange = (e) => {
     if (!e.target.files) return;
     const newFiles = Array.from(e.target.files);
@@ -48,57 +55,103 @@ const CreatePostArea = () => {
   const removeFile = (i) => setSelectedFiles(prev => prev.filter((_, idx) => idx !== i));
 
   const handleToggleCode = () => {
-    setShowCodeEditor(prev => { if (prev) setCode(''); return !prev; });
+    setShowCodeEditor(prev => {
+      if (!prev) setShowPoll(false); 
+      if (prev) setCode('');
+      return !prev;
+    });
+  };
+
+  const handleTogglePoll = () => {
+    setShowPoll(prev => {
+      if (!prev) {
+        setShowCodeEditor(false);
+        setSelectedFiles([]);      
+      }
+      return !prev;
+    });
+  };
+
+  const handleOptionChange = (index, value) => {
+    const newOptions = [...pollOptions];
+    newOptions[index] = value;
+    setPollOptions(newOptions);
+  };
+
+  const addOption = () => {
+    if (pollOptions.length < 4) setPollOptions([...pollOptions, '']);
+  };
+
+  const removeOption = (index) => {
+    if (pollOptions.length > 2) {
+      setPollOptions(pollOptions.filter((_, i) => i !== index));
+    }
   };
 
   const handlePostSubmit = async () => {
     const hasContent = content.trim().length > 0;
-    // Check if editor is open AND has actual text
     const isCodeActive = showCodeEditor && code.trim().length > 0;
-
-    console.log(isCodeActive)
     const hasFiles = selectedFiles.length > 0;
+    const validPollOptions = pollOptions.filter(opt => opt.trim() !== '');
+    const isPollActive = showPoll && validPollOptions.length >= 2;
 
-    // Global check: if nothing is being shared, exit
-    if (!hasContent && !isCodeActive && !hasFiles) return;
+    if (showPoll && !hasContent) {
+      toast.error("Please provide a question for your poll.");
+      return;
+    }
+
+    if (!hasContent && !isCodeActive && !hasFiles && !isPollActive) return;
 
     const formData = new FormData();
     formData.append('content', content);
 
-    // Only append code fields if there's actually code
     if (isCodeActive) {
-        formData.append('code', code.trim());
-        formData.append('codeLanguage', codeLanguage || 'javascript'); 
+      formData.append('code', code.trim());
+      formData.append('codeLanguage', codeLanguage || 'javascript');
+    }
+
+    if (isPollActive) {
+      formData.append('pollOptions', JSON.stringify(validPollOptions));
+      
+      // Calculate expiration date
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + parseInt(expiryDuration));
+      formData.append('pollExpiresAt', expiresAt.toISOString());
     }
 
     selectedFiles.forEach(f => formData.append('post-images', f));
 
     try {
-        await dispatch(createPost(formData)).unwrap();
-        toast.success('Post created successfully');
-        
-        // Reset all states
-        setContent(''); 
-        setCode(''); 
-        setShowPicker(false);
-        setShowCodeEditor(false); 
-        setSelectedFiles([]);
+      await dispatch(createPost(formData)).unwrap();
+      toast.success('Post created successfully');
+      
+      // Reset State
+      setContent('');
+      setCode('');
+      setShowPicker(false);
+      setShowCodeEditor(false);
+      setShowPoll(false);
+      setPollOptions(['', '']);
+      setSelectedFiles([]);
+      setExpiryDuration('7');
     } catch (err) {
-        toast.error(err || 'Failed to create post');
+      toast.error(err || 'Failed to create post');
     }
-    };
+  };
 
+  const validPollCount = pollOptions.filter(opt => opt.trim() !== '').length;
+  
   const isDisabled =
     isPosting ||
-    (content.trim().length === 0 &&
-     selectedFiles.length === 0 &&
-     !(showCodeEditor && code.trim().length > 0));
+    (showPoll 
+      ? (!content.trim() || validPollCount < 2) 
+      : !(content.trim() || selectedFiles.length > 0 || (showCodeEditor && code.trim()))
+    );
 
   return (
     <div className="border border-border rounded-xl p-4 shadow-sm bg-card transition-all">
-
       <TextareaAutosize
-        placeholder="Share your thoughts..."
+        placeholder={showPoll ? "Ask a question..." : "Share your thoughts..."}
         minRows={3}
         maxRows={10}
         className="w-full outline-none resize-none bg-transparent text-foreground placeholder:text-muted-foreground"
@@ -106,9 +159,8 @@ const CreatePostArea = () => {
         onChange={(e) => setContent(e.target.value)}
       />
 
-      {/* Code Editor */}
       {showCodeEditor && (
-        <div className="relative">
+        <div className="relative mt-3">
           <CodeEditor
             code={code}
             setCode={setCode}
@@ -118,23 +170,33 @@ const CreatePostArea = () => {
           />
           <button
             onClick={handleToggleCode}
-            className="absolute cursor-pointer -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform z-10"
-            title="Remove code block"
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform z-10"
           >
             <X size={14} />
           </button>
         </div>
       )}
 
-      {/* Image Preview Grid */}
-      {!showCodeEditor && previews.length > 0 && (
+      {showPoll && (
+        <PollOptions 
+          onToggle={handleTogglePoll} 
+          pollOptions={pollOptions} 
+          onAddOption={addOption} 
+          onRemoveOption={removeOption} 
+          onChange={handleOptionChange}
+          expiryDuration={expiryDuration}
+          onExpiryChange={setExpiryDuration}
+        />
+      )}
+
+      {!showCodeEditor && !showPoll && previews.length > 0 && (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mt-4">
           {previews.map((url, index) => (
             <div key={url} className="relative aspect-square">
-              <img src={url} alt="upload preview" className="w-full h-full object-cover rounded-lg border border-border shadow-sm" />
+              <img src={url} alt="upload" className="w-full h-full object-cover rounded-lg border border-border shadow-sm" />
               <button
                 onClick={() => removeFile(index)}
-                className="absolute -top-2 -right-2 bg-red-500 cursor-pointer text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:scale-110 transition-transform"
               >
                 <X size={14} />
               </button>
@@ -144,68 +206,77 @@ const CreatePostArea = () => {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col cursor-pointer items-center justify-center border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary aspect-square"
+              className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-muted-foreground hover:text-primary aspect-square cursor-pointer"
             >
               <Plus size={24} />
-              <span className="text-[10px] font-bold mt-1 uppercase">Add</span>
             </button>
           )}
         </div>
       )}
 
       <div className="flex justify-end mt-2">
-        {selectedFiles.length > 0 && !showCodeEditor && (
-          <span className="text-xs">{selectedFiles.length}/10 Images</span>
+        {selectedFiles.length > 0 && !showCodeEditor && !showPoll && (
+          <span className="text-[10px] font-medium text-muted-foreground">{selectedFiles.length}/10 Images</span>
         )}
       </div>
 
-      {/* Footer */}
       <div className="flex items-center flex-wrap gap-4 justify-between mt-4 pt-3 border-t border-border">
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
 
           <button
-            disabled={selectedFiles.length >= 10 || showCodeEditor}
+            disabled={selectedFiles.length >= 10 || showCodeEditor || showPoll}
             onClick={() => fileInputRef.current?.click()}
-            title={showCodeEditor ? "Disable code block to upload images" : "Upload images"}
-            className={`hover:bg-primary/20 size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300 ${showCodeEditor ? "opacity-30 cursor-not-allowed" : ""}`}
+            title="Upload images"
+            className={`hover:bg-primary/10 size-9 flex items-center justify-center rounded-full transition-colors ${ (showCodeEditor || showPoll) ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
           >
-            <Image size={20} />
+            <Image size={20} className="text-primary" />
           </button>
 
           <button
             onClick={handleToggleCode}
-            title={showCodeEditor ? "Remove code block" : "Add code block"}
-            className={`size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300 ${showCodeEditor ? "bg-primary/20 text-primary" : "hover:bg-primary/20"}`}
+            disabled={showPoll}
+            title="Add code block"
+            className={`size-9 flex items-center justify-center rounded-full transition-colors ${showCodeEditor ? "bg-primary/20 text-primary" : "hover:bg-primary/10 text-primary"} ${showPoll ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
           >
             <Code size={20} />
+          </button>
+
+          <button
+            onClick={handleTogglePoll}
+            disabled={showCodeEditor}
+            title="Create a poll"
+            className={`size-9 flex items-center justify-center rounded-full transition-colors ${showPoll ? "bg-primary/20 text-primary" : "hover:bg-primary/10 text-primary"} ${showCodeEditor ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+          >
+            <BarChart2 size={20} className="rotate-90" />
           </button>
 
           <div className="relative">
             <button
               onClick={() => setShowPicker(!showPicker)}
-              className="hover:bg-primary/20 size-8 flex items-center justify-center rounded-full cursor-pointer transition duration-300"
+              className="hover:bg-primary/10 size-9 flex items-center justify-center rounded-full cursor-pointer transition-colors"
             >
-              <Smile size={20} />
+              <Smile size={20} className="text-primary" />
             </button>
-            {showPicker && <EmojiPicker onSelect={(e) => setContent(prev => prev + e.emoji)} />}
+            {showPicker && <div className="absolute bottom-full left-0 z-50 mb-2"><EmojiPicker onSelect={(e) => setContent(prev => prev + e.emoji)} /></div>}
           </div>
         </div>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className={`text-xs font-mono ${content.length > 1000 && "text-red-500"}`}>
+        <div className="flex items-center gap-4">
+          <span className={`text-[11px] font-mono ${(content.length > 1000) ? "text-red-500 font-bold" : "text-muted-foreground"}`}>
             {content.length}/1000
           </span>
           <Button
             onClick={handlePostSubmit}
-            className={`h-8 py-0 px-3 text-xs gap-1.5 ${isDisabled && "opacity-50"}`}
+            className={`h-9 px-4 text-xs font-bold gap-2 ${isDisabled ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.02] active:scale-95"}`}
             disabled={isDisabled}
             variant="PRIMARY"
           >
-            {isPosting
-              ? <><Loader2 className="animate-spin mr-2" size={16} />Posting...</>
-              : <><Send className="w-3.5 h-3.5 mr-2" />Post</>
-            }
+            {isPosting ? (
+              <><Loader2 className="animate-spin" size={16} /> Posting</>
+            ) : (
+              <><Send size={14} /> Post</>
+            )}
           </Button>
         </div>
       </div>

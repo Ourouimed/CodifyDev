@@ -103,6 +103,17 @@ export const addReply = createAsyncThunk('posts/comments/addReply' , async (data
     }
 })
 
+
+
+export const voteInPoll = createAsyncThunk('posts/vote' , async (data , thunkAPI)=>{
+    try {
+        return await postService.voteInPoll(data.postId , data.optionIndex)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const postSlice = createSlice({
     name : 'post',
     initialState : {
@@ -170,7 +181,7 @@ export const postSlice = createSlice({
     })
     .addCase(createPost.fulfilled , (state , action)=>{
         state.isPosting = false
-        state.posts.push(action.payload.post)
+        state.posts.unshift(action.payload.post)
         console.log(action.payload)
     })
     .addCase(createPost.rejected , (state , action)=>{
@@ -293,6 +304,29 @@ export const postSlice = createSlice({
     .addCase(addReply.rejected, (state) => {
         state.isLoading = false;
     }) 
+
+    // Vote in poll 
+    .addCase(voteInPoll.pending , (state )=>{
+        state.isLoading = true
+    })
+    .addCase(voteInPoll.fulfilled, (state, action) => {
+        const updatedPost = action.payload.post;
+        console.log(updatedPost)
+        const index = state.posts.findIndex((p) => p._id === updatedPost._id);
+        if (index !== -1) {
+          state.posts[index] = {
+            ...state.posts[index],
+            poll: updatedPost.poll,
+          };
+        }
+
+        if (state.currentPost?._id === updatedPost._id) {
+          state.currentPost = {
+            ...state.currentPost,
+            poll: updatedPost.poll,
+          };
+        }
+      })
 })
 
 export const { toggleLikePost , toggleLikeComment , updateFollowStatus } = postSlice.actions

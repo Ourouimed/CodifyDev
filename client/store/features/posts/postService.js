@@ -60,10 +60,17 @@ const addReply = async (commentId , reply) => {
 };
 
 
+const voteInPoll = async (postId , optionIndex) => {
+    const response = await axiosService.post(`/api/posts/post/vote/${postId}` , {optionIndex});
+    return response.data;
+};
+
+
+
 
 
 
 const postService = {createPost , getAll , likePost, deletePost , addComment ,
-                    likeComment , addReply ,
+                    likeComment , addReply , voteInPoll,
                         getSinglePost , getFollowingPosts , getPostsByAuthor}
 export default postService

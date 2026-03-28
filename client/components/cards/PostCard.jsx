@@ -8,11 +8,11 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { 
     EllipsisVertical, Heart, UserPlus, MessageCircle, 
     Share, UserCheck, ChevronLeft, ChevronRight, 
-    Trash2, Bookmark, Link as LinkIcon, Flag, VolumeX
+    Trash2, Bookmark, Link as LinkIcon, Flag, Clock, CheckCircle2
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useToast } from "@/hooks/useToast";
-import { likePost, toggleLikePost, updateFollowStatus } from "@/store/features/posts/postSlice";
+import { likePost, toggleLikePost, updateFollowStatus, voteInPoll } from "@/store/features/posts/postSlice"; // Add voteInPoll to your slice
 import { followUnfollow } from "@/services/followUnfollow";
 import { useAuth } from "@/hooks/useAuth";
 import { usePopup } from "@/hooks/usePopup";
@@ -40,20 +40,16 @@ const PostCard = ({ post, isExpandedText }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    // Popup
     const { openPopup } = usePopup()
 
-    // Configuration
     const CHAR_LIMIT = 200;
     const isLongPost = post.content?.length > CHAR_LIMIT;
     const timeAgo = formatDistanceToNowStrict(new Date(post.createdAt), { addSuffix: true });
 
-    // Content Display Logic
     const displayedContent = isExpanded 
         ? post.content 
         : post.content?.slice(0, CHAR_LIMIT);
 
-    // Carousel Scroll Logic
     const handleScroll = () => {
         if (scrollRef.current) {
             const { scrollLeft, clientWidth } = scrollRef.current;
@@ -81,6 +77,18 @@ const PostCard = ({ post, isExpandedText }) => {
         }
     };
 
+    const handleVote = async (optionIndex) => {
+        if (post.poll?.isExpired) return toast.error("This poll has ended");
+        
+        try {
+            // This thunk should call your new /posts/:postId/vote endpoint
+            await dispatch(voteInPoll({ postId: post._id, optionIndex })).unwrap();
+            toast.success("Vote recorded");
+        } catch (err) {
+            toast.error(err || "Failed to vote");
+        }
+    };
+
     const handleShare = () => {
         const postUrl = `${window.location.origin}/feed/post/${post._id}`;
         navigator.clipboard.writeText(postUrl)
@@ -101,6 +109,62 @@ const PostCard = ({ post, isExpandedText }) => {
         }
     };
 
+    const renderPoll = () => {
+        console.log(post?.poll?.options.length)
+        if (post?.poll?.options.length < 2) return null;
+
+        const { options, totalVotes, isExpired, userVotedOptionIndex } = post.poll;
+        const hasVoted = userVotedOptionIndex !== -1;
+
+        return (
+            <div className="mt-4 space-y-3 bg-secondary/20 p-4 rounded-xl border border-border/50">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                        <Clock size={12} /> {isExpired ? "Poll Ended" : "Active Poll"}
+                    </span>
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                        {totalVotes} {totalVotes === 1 ? 'vote' : 'votes'}
+                    </span>
+                </div>
+
+                <div className="space-y-2">
+                    {options.map((option, index) => {
+                        const isMyVote = userVotedOptionIndex === index;
+                        
+                        return (
+                            <button
+                                key={index}
+                                disabled={isExpired || hasVoted}
+                                onClick={() => handleVote(index)}
+                                className={`relative w-full text-left p-3 rounded-lg border transition-all overflow-hidden group 
+                                    ${isMyVote ? 'border-primary bg-primary/5' : 'border-border bg-card'}
+                                    ${(!hasVoted && !isExpired) ? 'hover:border-primary/50 cursor-pointer' : 'cursor-default'}
+                                `}
+                            >
+                                {/* Progress Bar Background */}
+                                {(hasVoted || isExpired) && (
+                                    <div 
+                                        className={`absolute left-0 top-0 h-full transition-all duration-1000 ${isMyVote ? 'bg-primary/20' : 'bg-muted/50'}`}
+                                        style={{ width: `${option.percentage}%` }}
+                                    />
+                                )}
+
+                                <div className="relative flex justify-between items-center z-10">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-medium">{option.optionText}</span>
+                                        {isMyVote && <CheckCircle2 size={14} className="text-primary" />}
+                                    </div>
+                                    {(hasVoted || isExpired) && (
+                                        <span className="text-xs font-bold">{option.percentage}%</span>
+                                    )}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
 
     const renderSlideshow = () => {
         const images = post.images || [];
@@ -153,19 +217,6 @@ const PostCard = ({ post, isExpandedText }) => {
                         {activeIndex + 1}/{images.length}
                     </div>
                 )}
-
-                {images.length > 1 && (
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 px-2 py-1 bg-black/20 backdrop-blur-md rounded-full">
-                        {images.map((_, index) => (
-                            <div 
-                                key={index}
-                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                                    index === activeIndex ? "bg-white" : "bg-white/40"
-                                }`}
-                            />
-                        ))}
-                    </div>
-                )}
             </div>
         );
     };
@@ -182,6 +233,7 @@ const PostCard = ({ post, isExpandedText }) => {
 
 
     const parseMentions = (text) => {
+        if (!text) return "";
         const parts = text.split(/(@[a-zA-Z0-9_.]+)/g);
 
         return parts.map((part, i) => {
@@ -206,12 +258,13 @@ const PostCard = ({ post, isExpandedText }) => {
     return (
         <div className="p-4 rounded-xl border border-border space-y-3 bg-card transition-all hover:shadow-sm">
             {/* Header Section */}
-            <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-3 w-full">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                    {/* Avatar Section */}
                     <div className="relative w-10 h-10 overflow-hidden rounded-full border border-border flex-shrink-0">
                         {post.author?.avatar ? (
                             <Image
-                                src={post.author?.avatar} 
+                                src={post.author?.avatar}
                                 alt="avatar"
                                 fill
                                 className="object-cover"
@@ -222,72 +275,67 @@ const PostCard = ({ post, isExpandedText }) => {
                             </div>
                         )}
                     </div>
-                    <div className="flex flex-col">
-                        <Link href={`/profile/${post.author?.username}`}>
-                            <h3 className="font-bold text-sm leading-tight hover:underline">
+
+                    {/* Text Section - uses min-w-0 to allow shrinking for line breaks */}
+                    <div className="flex flex-col min-w-0">
+                        <Link href={`/profile/${post.author?.username}`} className="hover:underline">
+                            <h3 className="font-bold text-sm leading-tight break-words line-clamp-2">
                                 {post.author?.displayName || post.author?.username}
                             </h3>
                         </Link>
-                        <span className="text-xs">
-                            @{post.author?.username} · {timeAgo}
+                        
+                        {/* Responsive metadata: Hidden on mobile, shown on medium screens (md) */}
+                        <span className="text-xs text-muted-foreground truncate">
+                            <span className="hidden md:inline">@{post.author?.username} · </span>
+                            {timeAgo}
                         </span>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1">
+                {/* Actions Section */}
+                <div className="flex items-center gap-1 flex-shrink-0">
                     {post.author?.username !== user?.username && (
                         <Button 
-                            variant='outline' 
+                            variant={post.isFollowing ? 'outline' : 'default'}
                             className="h-8 py-0 px-3 text-xs gap-1.5" 
                             onClick={() => handleFollowUnfollow(post.author?.username)}
                         >
-                            {post.isFollowing ? 'Unfollow' : 'Follow'}
+                            <span className="hidden sm:inline">{post.isFollowing ? 'Unfollow' : 'Follow'}</span>
                             {post.isFollowing ? <UserCheck className="w-3.5 h-3.5"/> : <UserPlus className="w-3.5 h-3.5"/>}
                         </Button>
                     )}
+                    
                     <div className="relative" ref={dropdownRef}>
                         <button className="cursor-pointer p-2 hover:text-primary 
-                                        hover:bg-primary/10 rounded-full transition-all" 
-                                        onClick={()=> setIsOpen(!isOpen)}>
+                                            hover:bg-primary/10 rounded-full transition-all" 
+                                onClick={() => setIsOpen(!isOpen)}>
                             <EllipsisVertical className="w-4 h-4"/>
                         </button>
+                        
                         {isOpen && (
                             <div className="z-50 min-w-56 absolute right-0 mt-2 bg-background border border-border rounded-xl shadow-xl animate-in fade-in zoom-in duration-200 divide-y divide-border overflow-hidden">
                                 <div className="p-1.5">
-                                    <button 
-                                        className='cursor-pointer w-full flex items-center gap-2 text-sm hover:bg-secondary py-2 px-3 rounded-md transition-colors' 
-                                    >
-                                        <Bookmark size={16}/>
-                                        Save Post
+                                    <button className='cursor-pointer w-full flex items-center gap-2 text-sm hover:bg-secondary py-2 px-3 rounded-md transition-colors'>
+                                        <Bookmark size={16}/> Save Post
                                     </button>
                                     <button 
                                         className='cursor-pointer w-full flex items-center gap-2 text-sm hover:bg-secondary py-2 px-3 rounded-md transition-colors' 
                                         onClick={handleShare}
                                     >
-                                        <LinkIcon size={16}/>
-                                        Copy Link
+                                        <LinkIcon size={16}/> Copy Link
                                     </button>
                                 </div>
-                                
                                 <div className="p-1.5">
-                                    {post.author?.username !== user?.username && (
-                                        <>
-                                            <button 
-                                                className='cursor-pointer w-full flex items-center gap-2 text-sm text-destructive hover:bg-red-500/10 py-2 px-3 rounded-md transition-colors' 
-                                            >
-                                                <Flag size={16}/>
-                                                Report Post
-                                            </button>
-                                        </>
-                                    )}
-
-                                    {post.author?.username === user?.username && (
+                                    {post.author?.username !== user?.username ? (
+                                        <button className='cursor-pointer w-full flex items-center gap-2 text-sm text-destructive hover:bg-red-500/10 py-2 px-3 rounded-md transition-colors'>
+                                            <Flag size={16}/> Report Post
+                                        </button>
+                                    ) : (
                                         <button 
                                             className='cursor-pointer w-full flex items-center gap-2 text-sm text-destructive hover:bg-red-500/10 py-2 px-3 rounded-md transition-colors' 
                                             onClick={handleOpenDeletePopup}
                                         >
-                                            <Trash2 size={16}/>
-                                            Delete Post
+                                            <Trash2 size={16}/> Delete Post
                                         </button>
                                     )}
                                 </div>
@@ -318,11 +366,18 @@ const PostCard = ({ post, isExpandedText }) => {
                 )}
             </div>
 
-            {post?.codeEditor?.code && <CodeEditor
-                        code={post.codeEditor?.code}
-                        language={post.codeEditor?.codeLanguage}
-                        isEditingMode={false}
-                      />}
+            {/* Code Content */}
+            {post?.codeEditor?.code && (
+                <CodeEditor
+                    code={post.codeEditor?.code}
+                    language={post.codeEditor?.codeLanguage}
+                    isEditingMode={false}
+                />
+            )}
+
+            {/* Poll Content */}
+            {renderPoll()}
+
             {/* Slideshow Content */}
             {renderSlideshow()}
 
