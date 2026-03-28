@@ -3,7 +3,8 @@ import verifyJWT from '../middlewares/verifyJWT.js'
 import multer from 'multer'
 import { createPost, getAllPosts , getPostById , likePost ,
      getFollowingPosts, getPostsByAuthor, deletePost , addComment , likeComment,
-     addReply} from '../controllers/postController.js'
+     addReply,
+     voteInPoll} from '../controllers/postController.js'
 const router = express.Router()
 
 
@@ -22,5 +23,7 @@ router.get('/' , verifyJWT , getAllPosts)
 router.get('/following' , verifyJWT , getFollowingPosts)
 router.get('/post/:postId' , verifyJWT , getPostById)
 router.get('/author/:username' , verifyJWT , getPostsByAuthor)
+
+router.post('/post/vote/:postId' , verifyJWT , voteInPoll)
 
 export default router

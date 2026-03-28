@@ -26,6 +26,7 @@ export const fetchSearchRes = async (req, res) => {
       ]
     }).populate('author', 'username avatar displayName').sort({ createdAt: -1 }).lean();
 
+
     const profileMap = profiles.map(user => ({
       ...user.toObject(),
       type: "profile"

@@ -4,7 +4,8 @@ import User from "../models/User.js";
 import Comment from "../models/Comment.js"; 
 import Notification from "../models/Notification.js";
 
-// --- HELPERS ---
+// HELPERS 
+
 const buildCommentTree = (allComments, userId, pId = null) => {
     return allComments
         .filter(c => {
@@ -25,9 +26,35 @@ const processedPost = (post, allComments, userId) => {
 
     const commentTree = buildCommentTree(allComments || [], userId);
 
+    // Process Poll Data
+    let pollData = null;
+    if (post.poll && post.poll.options) {
+        const totalVotes = post.poll.options.reduce((acc, opt) => acc + (opt.votes?.length || 0), 0);
+        const isExpired = post.poll.expiresAt ? new Date() > new Date(post.poll.expiresAt) : false;
+        
+        // Find if user has already voted and for which option index
+        const userVotedOptionIndex = userId 
+            ? post.poll.options.findIndex(opt => opt.votes?.some(id => id.toString() === userId.toString()))
+            : -1;
+
+        pollData = {
+            expiresAt: post.poll.expiresAt,
+            totalVotes,
+            isExpired,
+            userVotedOptionIndex,
+            options: post.poll.options.map((opt, index) => ({
+                optionText: opt.optionText,
+                voteCount: opt.votes?.length || 0,
+                percentage: totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0,
+                isVotedByMe: index === userVotedOptionIndex
+            }))
+        };
+    }
+
     return {
         ...post,
         codeEditor: post.codeEditor || null,
+        poll: pollData, 
         isLiked: userId
             ? post.likes?.some(id => id.toString() === userId.toString())
             : false,
@@ -40,65 +67,113 @@ const processedPost = (post, allComments, userId) => {
     };
 };
 
-// --- CONTROLLERS ---
+//CONTROLLERS
+
 const createPost = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { content , code , codeLanguage} = req.body;
-        // extract mentioned users from content
-        const usernames = [...content.matchAll(/@([a-zA-Z0-9_.]+)/g)].map(m => m[1]);
-
-        // find users in DB
-        const mentionedUsers = await User.find({
-            username: { $in: usernames }
-        }).select('_id username');
-
-        const filteredUsers = mentionedUsers.filter(
-            u => u._id.toString() !== userId
-        );
-
-        const uniqueUserIds = [...new Set(filteredUsers.map(u => u._id.toString()))];
+        const { content, code, codeLanguage, pollOptions, pollExpiresAt } = req.body;
         const files = req.files || [];
 
-        if (!content && !code && files.length === 0) {
-            return res.status(400).json({ error: 'Post must have at least text , code snipet or an image!' });
+        // Parse poll options from JSON string sent via FormData
+        let parsedPollOptions = [];
+        if (pollOptions) {
+            try {
+                parsedPollOptions = JSON.parse(pollOptions);
+            } catch (e) {
+                return res.status(400).json({ error: 'Invalid poll options format' });
+            }
         }
 
+        // Global Validation
+        const hasContent = content?.trim().length > 0;
+        const hasCode = code?.trim().length > 0;
+        const hasFiles = files.length > 0;
+        const hasPoll = parsedPollOptions.length >= 2;
+
+        if (!hasContent && !hasCode && !hasFiles && !hasPoll) {
+            return res.status(400).json({ error: 'Post must have at least text, code, images, or a poll!' });
+        }
+
+        // Upload images if any
         const uploadPromises = files.map((file, index) => {
             const fileName = `post-images/${userId}/${Date.now()}-${index}.jpg`;
             return uploadImage(file.buffer, fileName);
         });
-
         const imageUrls = await Promise.all(uploadPromises);
 
-        const post = await Post.create({
+        // Mention Logic
+        const usernames = hasContent ? [...content.matchAll(/@([a-zA-Z0-9_.]+)/g)].map(m => m[1]) : [];
+        const mentionedUsers = await User.find({ username: { $in: usernames } }).select('_id');
+        const uniqueUserIds = mentionedUsers
+            .filter(u => u._id.toString() !== userId)
+            .map(u => u._id);
+
+        // Build Post Object
+        const postData = {
             content,
             author: userId,
             images: imageUrls,
-            ...(code && {
-                codeEditor: {
-                    code,
-                    codeLanguage
-                }
-            }),
-            mentions : uniqueUserIds
-            });
-        await Notification.insertMany(
-            mentionedUsers.map(user => ({
-                recipient: user._id,
-                sender: userId,
-                type: 'mention',
-                post: post._id,
-                message: `mentioned you in a post`
-            }))
-        );
-        const populated = await Post.findById(post._id).populate('author', 'username avatar displayName').lean();
+            mentions: uniqueUserIds
+        };
+
+        if (hasCode) {
+            postData.codeEditor = { code, codeLanguage: codeLanguage || 'javascript' };
+        }
+
+        if (hasPoll) {
+            console.log('test')
+            postData.poll = {
+                options: parsedPollOptions.map(opt => ({ optionText: opt, votes: [] })),
+                expiresAt: pollExpiresAt ? new Date(pollExpiresAt) : undefined
+            };
+        }
+
+        const post = await Post.create(postData);
+
+        const populated = await Post.findById(post._id).populate('author', 'username avatar displayName followers').lean();
+        console.log(postData)
         return res.json({ 
             message: 'Post created successfully', 
             post: processedPost(populated, [], userId) 
         });
     } catch (err) {
-        console.log(err)
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+const voteInPoll = async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { optionIndex } = req.body;
+        const userId = req.user.id;
+
+        const post = await Post.findById(postId);
+        if (!post || !post.poll) return res.status(404).json({ error: 'Poll not found' });
+
+        // Check expiration
+        if (post.poll.expiresAt && new Date() > new Date(post.poll.expiresAt)) {
+            return res.status(400).json({ error: 'This poll has ended' });
+        }
+
+
+        post.poll.options.forEach(option => {
+            option.votes = option.votes.filter(id => id.toString() !== userId.toString());
+        });
+
+        if (optionIndex >= 0 && optionIndex < post.poll.options.length) {
+            post.poll.options[optionIndex].votes.push(userId);
+        }
+
+        await post.save();
+
+        const updated = await Post.findById(postId).populate('author', 'username avatar displayName followers').lean();
+        const allComments = await Comment.find({ postId }).populate('author', 'username avatar displayName').lean();
+
+        return res.json({ message: 'Vote recorded', post: processedPost(updated, allComments, userId) });
+    } catch (err) {
+        console.error(err);
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -189,7 +264,6 @@ const addComment = async (req, res) => {
             parentId: null
         });
 
-        
         const post = await Post.findByIdAndUpdate(
             postId,
             { $inc: { commentCount: 1 } },
@@ -210,7 +284,6 @@ const addComment = async (req, res) => {
         const allComments = await Comment.find({ postId }).populate('author', 'username avatar displayName').lean();
         return res.json({ post: processedPost(post, allComments, userId) });
     } catch (err) {
-        console.log(err)
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -251,7 +324,6 @@ const addReply = async (req, res) => {
         const allComments = await Comment.find({ postId: post._id }).populate('author', 'username avatar displayName').lean();
         return res.json({ post: processedPost(post, allComments, userId) });
     } catch (err) {
-        console.log(err)
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
@@ -266,7 +338,7 @@ const likeComment = async (req, res) => {
 
         const isLiked = comment.likes.includes(userId);
 
-        const updatedComment = await Comment.findByIdAndUpdate(
+        await Comment.findByIdAndUpdate(
             commentId,
             isLiked ? { $pull: { likes: userId } } : { $addToSet: { likes: userId } },
             { new: true }
@@ -352,5 +424,6 @@ const getPostsByAuthor = async (req, res) => {
 
 export { 
     createPost, getAllPosts, getPostById, likeComment, addReply, 
-    likePost, getFollowingPosts, getPostsByAuthor, addComment, deletePost 
+    likePost, getFollowingPosts, getPostsByAuthor, addComment, deletePost,
+    voteInPoll
 };
