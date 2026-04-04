@@ -9,8 +9,6 @@ import { generateUniqueUsername } from '../lib/generate-unique-username.js';
 config()
 const JWT_SECRET = process.env.JWT_SECRET  
 
-
-
 // GitHub Strategy
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID,
@@ -62,7 +60,6 @@ passport.use(new GitHubStrategy({
         // If found by email but githubId wasn't set, link it now
         user.githubId = profile.id;
         user.githubUsername = profile.username;
-        user.lastLogin = new Date();
         await user.save();
         return done(null, user);
       }
@@ -80,7 +77,8 @@ passport.use(new GitHubStrategy({
         displayName: profile.displayName || profile.username,
         avatar: profile._json.avatar_url,
         provider: 'github',
-        lastLogin: new Date(),
+        email_verified : email ? true : false ,
+        email_verified_at : email ? new Date() : null ,
         bio: "",
         banner: ""
       });
@@ -123,7 +121,9 @@ passport.use(new GoogleStrategy({
         username: uniqueUsername,
         displayName: profile.displayName,
         avatar: profile.photos?.[0]?.value,
-        provider: 'google',
+        provider: 'google', 
+        email_verified : true,
+        email_verified_at :  new Date(),
         lastLogin: new Date()
       });
 

@@ -32,7 +32,16 @@ const UserSchema = new mongoose.Schema({
   location: String,
   linkedin: String,
   github: String,
-  website: String 
+  website: String  ,
+  email_verified : { type : Boolean , default : false},
+  email_verified_at : { type : Date , default : null} ,
+  otp : {
+    code : {
+      type: String ,
+      default : null
+    },
+    code_sent_at : { type : Date , default : null} 
+  }
 }, { timestamps: true });
 
 const User = mongoose.model('User', UserSchema);

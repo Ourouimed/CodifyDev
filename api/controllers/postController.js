@@ -5,7 +5,6 @@ import Comment from "../models/Comment.js";
 import Notification from "../models/Notification.js";
 
 // HELPERS 
-
 const buildCommentTree = (allComments, userId, pId = null) => {
     return allComments
         .filter(c => {
