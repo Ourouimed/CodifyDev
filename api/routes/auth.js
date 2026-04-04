@@ -1,7 +1,7 @@
 import express from 'express'
 import verifyJWT from '../middlewares/verifyJWT.js'
 import passport from 'passport';
-import { authCallback, followUnfollowUser, getProfile, login, logout, register, updateProfile ,setPassword , setEmail , verifySession, deleteAccount, verifyOtp , resendOtp } from '../controllers/authController.js'
+import { authCallback, followUnfollowUser, getProfile, login, logout, register, updateProfile ,setPassword , setEmail , verifySession, deleteAccount, verifyOtp , resendOtp, sendResetLink, resetPassword } from '../controllers/authController.js'
 import { config } from 'dotenv';
 import multer from 'multer'
 
@@ -59,4 +59,6 @@ router.delete('/account/delete' , verifyJWT , deleteAccount)
 
 router.post('/verify-otp' , verifyOtp)
 router.post('/resend-otp' , resendOtp)
+router.post('/forgot-password' , sendResetLink)
+router.post('/reset-password' , resetPassword)
 export default router

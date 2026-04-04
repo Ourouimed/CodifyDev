@@ -41,6 +41,10 @@ const UserSchema = new mongoose.Schema({
       default : null
     },
     code_sent_at : { type : Date , default : null} 
+  },
+  reset_token : {
+    token : { type : String , default : null} ,
+    token_sent_at : { type : Date , default : null}
   }
 }, { timestamps: true });
 

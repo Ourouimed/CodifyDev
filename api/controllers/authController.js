@@ -7,7 +7,8 @@ import CryptoJS from "crypto-js";
 import { uploadImage } from "../lib/upload-image.js";
 import Notification from "../models/Notification.js";
 import { generateOtp } from "../lib/generate-otp.js";
-import { sendVerificationEmail } from "../lib/send-email.js";
+import { sendEmailVerifiedConfirmation, sendPasswordChangedConfirmationEmail, sendPasswordResetEmail, sendVerificationEmail, sendWelcomeEmail } from "../lib/send-email.js";
+import { generateResetToken } from "../lib/generate-reset-token.js";
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -61,7 +62,6 @@ const register = async (req, res) => {
             otp: { code: hashedOtp, code_sent_at: new Date() },
             provider: 'email'
         });
-
         return res.json({
             message: 'User created successfully',
             user: formatUserResponse(newUser)
@@ -141,8 +141,15 @@ const verifyOtp = async (req, res) => {
     try {
         if (!otpSent || !email) return res.status(401).json({ error: 'Some required fields are empty' });
 
-        const user = await User.findOne({ email }, { otp: 1, email_verified: 1 });
+        const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ error: 'User not found' });
+
+        console.log(user.password)
+        if (!user.password) {
+            return res.status(400).json({
+                error: `This account uses ${user?.provider} login. Please sign in with ${user.provider}.`
+            });
+        }
 
         if (user.email_verified) return res.status(400).json({ error: 'Email already verified' });
 
@@ -160,8 +167,9 @@ const verifyOtp = async (req, res) => {
             }
         });
 
-        const updatedUser = await User.findOne({ email });
-        return res.json({ message: 'Email verified successfully', user: formatUserResponse(updatedUser) });
+        await sendEmailVerifiedConfirmation(email , user.displayName)
+        await sendWelcomeEmail(email , user.displayName)
+        return res.json({ message: 'Email verified successfully'});
 
     } catch (err) {
         console.error(err);
@@ -175,7 +183,13 @@ const resendOtp = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ error: 'User not found' });
-        if (user.email_verified) return res.status(400).json({ error: 'Email already verified' });
+        if (!user.email_verified) return res.status(400).json({ error: 'Email already verified' });
+
+        if (!user.password) {
+            return res.status(400).json({
+                error: `This account uses ${user.provider} login. Please sign in with ${user.provider.charAt(0).toUpperCase() + user.provider.slice(1)}.`
+            });
+        }
 
         const otp = generateOtp(6);
         const hashedOtp = CryptoJS.SHA256(otp).toString();
@@ -193,6 +207,91 @@ const resendOtp = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
+// --- PASSWORD RESET CONTROLLERS --- 
+const resetPassword = async (req , res)=>{
+    const { password , email} = req.body
+    const { token } = req.query
+    try {
+        if (!token || !password || !email) return res.status(401).json({ error: 'Some required fields are empty' });
+
+        const user = await User.findOne({email});
+        if (!user)return res.status(404).json({error : 'User not found'})
+
+        if (!user.password) {
+            return res.status(400).json({
+                error: `This account uses ${user.provider} login. Please sign in with ${user.provider.charAt(0).toUpperCase() + user.provider.slice(1)}.`
+            });
+        }
+
+        
+
+        const tokenIsMath = user?.reset_token?.token === token
+        if(!tokenIsMath) return res.status(401).json({error : 'token unvalid'})
+
+
+        const passwordMatch = await bcrypt.compare(password , user.password)
+        if(passwordMatch) return res.status(401).json({error : 'New password cannot be your old password'})
+        const newHashedPass = await bcrypt.hash(password , 10)
+
+        
+
+        const diffMinutes = Math.floor((new Date() - new Date(user?.reset_token?.token_sent_at)) / (1000 * 60));
+        if (diffMinutes > 10) return res.status(401).json({ error: 'Token expired' });  
+
+        await User.findOneAndUpdate({ email }, {
+            $set: {
+                reset_token: { token: null, token_sent_at : null },
+                password : newHashedPass
+            }
+        } , {new : true});
+        await sendPasswordChangedConfirmationEmail(email)
+        return res.json({message : 'new password set successfully'})
+
+    }
+    catch (err) {
+        console.error(err);
+        if (err.name === 'CastError') return res.status(400).json({ error: 'Invalid data format' });
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+const sendResetLink = async (req , res)=>{
+    const { email } = req.body
+    try {
+        const user = await User.findOne({email})
+        if (!user){
+            return res.status(404).json({error : 'User not found'})
+        }
+
+        if (!user.password) {
+            return res.status(400).json({
+                error: `This account uses ${user.provider} login. Please sign in with ${user.provider.charAt(0).toUpperCase() + user.provider.slice(1)}.`
+            });
+        }
+
+        if (!user.email_verified){
+            return res.status(401).json({error : 'Email not verified'})
+        }
+
+
+
+        const token = generateResetToken();
+        await User.findOneAndUpdate({email} , {
+            $set : {
+                reset_token: { token: token, token_sent_at: new Date() },
+            }
+        })
+        await sendPasswordResetEmail(email , token)
+
+        return res.json({message : 'Password reset link sent to your email'})
+    }
+    catch (err) {
+        console.error(err);
+        if (err.name === 'CastError') return res.status(400).json({ error: 'Invalid data format' });
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
 
 // --- PROFILE CONTROLLERS ---
 
@@ -366,6 +465,7 @@ const authCallback = (req, res) => {
         sameSite: process.env.NODE_ENV === "production" ? "None" : "lax",
         maxAge: 3600000,
     });
+
     res.redirect('http://localhost:3000/feed');
 };
 
@@ -375,6 +475,7 @@ export {
     verifySession,
     logout,
     setEmail,
+    sendResetLink ,
     setPassword,
     verifyOtp,
     resendOtp,
@@ -382,5 +483,6 @@ export {
     updateProfile,
     getProfile,
     followUnfollowUser,
-    deleteAccount
+    deleteAccount , 
+    resetPassword
 };
