@@ -49,8 +49,16 @@ const updateProfile = async (data)=>{
     return respone.data
 }
 
+const verifyOtp = async (data)=>{
+    const respone = await axiosService.post('/api/auth/verify-otp' , data)
+    return respone.data
+}
 
+const resendOtp = async (email)=>{
+    const respone = await axiosService.post('/api/auth/resend-otp' , {email})
+    return respone.data
+}
 
-const authService = { register , login , verifySession , 
+const authService = { register , login , verifySession , verifyOtp , resendOtp , 
                 logout , updateProfile , setEmail , setPassword , deleteAccount}
 export default authService

@@ -86,11 +86,25 @@ const Profile = ({ user, isMyProfile, setProfile }) => {
                 </div>
 
                 {/* User Info */}
-                <div className="space-y-1">
-                    <h1 className="text-2xl font-bold tracking-tight">
-                        {user?.name || "Anonymous User"}
-                    </h1>
-                    <p className="text-muted-foreground">@{user?.username}</p>
+                <div className="flex justify-between items-center">
+                    <div className="space-y-1">
+                        <h1 className="text-2xl font-bold tracking-tight">
+                            {user?.name || "Anonymous User"}
+                        </h1>
+                        <p>@{user?.username}</p> 
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {user?.github && (
+                            <Link href={formatUrl(user.github)} target="_blank" className="bg-black flex items-center justify-center p-3 rounded-xl border border-border">
+                                <Github size={16} />
+                            </Link>
+                        )}
+                        {user?.linkedin && (
+                            <Link href={formatUrl(user.linkedin)} target="_blank" className="bg-[#0a66c2] flex items-center justify-center p-3 rounded-xl border border-border">
+                                <Linkedin size={16} />
+                            </Link>
+                        )}
+                    </div>
                 </div>
 
                 {/* Stats */}
@@ -105,19 +119,41 @@ const Profile = ({ user, isMyProfile, setProfile }) => {
                     </div>
                 </div>
 
+                {/* Website */}
+                {user?.website && (
+                    <Link 
+                        href={formatUrl(user.website)} 
+                        target="_blank" 
+                        className="group mt-4 flex items-center gap-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 transition-all duration-200 hover:bg-primary/10 hover:border-primary/40"
+                    >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                        <Globe size={20} />
+                        </div>
+                        
+                        <div className="flex flex-col overflow-hidden">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-primary/60">
+                            Official Website
+                        </p>
+                        <span className="truncate text-sm font-semibold text-primary underline-offset-4 group-hover:underline">
+                            {user.website.replace(/^https?:\/\//, '')}
+                        </span>
+                        </div>
+                    </Link>
+                )}
+
                 {/* Socials / Location */}
                 {hasSocials && (
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-border pt-4">
-                        {user?.location && (
+                        {/* {user?.location && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <MapPin size={16} /> {user.location}
                             </div>
-                        )}
-                        {user?.website && (
+                        )} */}
+                        {/* {user?.website && (
                             <Link href={formatUrl(user.website)} target="_blank" className="flex items-center gap-2 text-sm font-medium text-primary hover:underline">
                                 <Globe size={16} /> {user.website.replace(/^https?:\/\//, '')}
                             </Link>
-                        )}
+                        )} */}
                         {user?.github && (
                             <Link href={formatUrl(user.github)} target="_blank" className="flex items-center gap-2 text-sm font-medium text-primary hover:underline">
                                 <Github size={16} /> GitHub

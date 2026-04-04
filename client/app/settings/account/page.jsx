@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/useToast"
 import { setEmail as setEmailAction } from "@/store/features/auth/authSlice"
 import { setPassword as setPasswordAction } from "@/store/features/auth/authSlice"
 import { usePopup } from "@/hooks/usePopup"
+import Link from "next/link"
 
 const AccountPage = () => {
     const [email, setEmailAddress] = useState('')
@@ -125,6 +126,8 @@ const AccountPage = () => {
                                     disabled={hasEmail} 
                                     placeholder={!hasEmail ? "dev@codify.dev" : ""}
                                 />
+                                {user?.email && !user?.email_verified && <p className="text-[10px] text-yellow-500 ml-1 font-medium">Email not verified yet , check your email inbox or verify it 
+                                    {" "}<Link href={`/otp?email=${user.email}`} target="_blank" className="underline font-bold">here</Link></p>}
                                 {errors.email && <p className="text-[10px] text-red-500 ml-1 font-medium">{errors.email}</p>}
                             </div>
                             

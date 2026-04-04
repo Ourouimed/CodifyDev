@@ -11,10 +11,12 @@ import { Input } from "./ui/Input"
 import { Divider } from "./ui/Divider"
 import { GithubAuthBtn } from "./ui/GithubAuthBtn"
 import { GoogleAuthBtn } from "./ui/GoogleAuthBtn"
+import { useRouter } from "next/navigation"
 
 const RegisterForm = ({ goToLogin }) => {
     const dispatch = useDispatch()
     const toast = useToast()
+    const router = useRouter()
     const { isLoading } = useAuth()
 
     const [registerForm, setRegisterForm] = useState({
@@ -30,9 +32,16 @@ const RegisterForm = ({ goToLogin }) => {
     const validateForm = () => {
         const newErrors = {}
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        const usernameRegex = /^[a-zA-Z0-9._]+$/  // only letters, numbers, dots, underscores
 
         if (!registerForm.name.trim()) newErrors.name = "Full name is required"
-        if (registerForm.username.length < 3) newErrors.username = "Username must be at least 3 characters"
+
+        if (registerForm.username.length < 3) {
+            newErrors.username = "Username must be at least 3 characters"
+        } else if (!usernameRegex.test(registerForm.username)) {
+            newErrors.username = "Username can only contain letters, numbers, dots and underscores"
+        }
+
         if (!emailRegex.test(registerForm.email)) newErrors.email = "Please enter a valid email address"
         if (registerForm.password.length < 6) newErrors.password = "Password must be at least 6 characters"
         if (registerForm.password !== registerForm.confirmPass) {
@@ -48,7 +57,7 @@ const RegisterForm = ({ goToLogin }) => {
             try {
                 await dispatch(register(registerForm)).unwrap()
                 toast.success('Account created successfully!')
-                goToLogin()
+                router.push(`/otp?email=${registerForm.email}`)
             } catch (err) {
                 toast.error(err || 'An error occurred during registration')
             }
@@ -62,7 +71,7 @@ const RegisterForm = ({ goToLogin }) => {
     }
 
     return (
-        <div className="space-y-4 border border-border rounded-lg shadow-xl p-5 w-md animate-in fade-in duration-500">
+        <div className="space-y-4 border border-border rounded-xl shadow-xl p-5 w-md">
             {/* Header / Branding */}
             <div className="flex justify-center flex-col items-center gap-1">
                 <div className="bg-primary/30 size-16 rounded-full flex justify-center items-center">

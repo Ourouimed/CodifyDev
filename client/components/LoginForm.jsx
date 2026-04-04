@@ -55,7 +55,7 @@ const LoginForm = ({goToRegister})=>{
         const { id , value } = e.target
         setLoginForm(prev => ({...prev , [id] : value}))
     }
-    return <div className="space-y-4 border border-border rounded-lg shadow-xl p-5 w-md">
+    return <div className="space-y-4 border border-border rounded-xl shadow-xl p-5 w-md ">
         <div className="flex justify-center flex-col items-center gap-1">
             <div className="bg-primary/30 size-16 rounded-full flex justify-center items-center">
                 <Terminal className="text-primary font-bold size-8"/>

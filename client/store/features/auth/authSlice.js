@@ -54,6 +54,28 @@ export const verifySession = createAsyncThunk('auth/verify-session' , async (_ ,
 
 
 
+export const verifyOtp = createAsyncThunk('auth/verify-otp' , async (data, thunkAPI)=>{
+  try {
+    return await authService.verifyOtp(data)
+  }
+  catch (err){
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
+
+export const resendOtp = createAsyncThunk('auth/resend-otp' , async (email, thunkAPI)=>{
+  try {
+    return await authService.resendOtp(email)
+  }
+  catch (err){
+    console.log(err)
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
+
+
 export const setEmail = createAsyncThunk('auth/setEmail' , async (email , thunkAPI)=>{
   try {
     return await authService.setEmail(email)
@@ -219,7 +241,29 @@ export const authSlice = createSlice({
     .addCase(deleteAccount.rejected, (state) => {
       state.isLoading = false;
       state.user = null
+    }) 
+
+    // verify otp 
+    .addCase(verifyOtp.pending , state =>{
+      state.isLoading = true
     })
+    .addCase(verifyOtp.fulfilled , state =>{
+      state.isLoading = false
+    }) 
+    .addCase(verifyOtp.rejected , state =>{
+      state.isLoading = false
+    }) 
+
+    // resened otp
+    .addCase(resendOtp.pending , state =>{
+      state.isLoading = true
+    })
+    .addCase(resendOtp.fulfilled , state =>{
+      state.isLoading = false
+    }) 
+    .addCase(resendOtp.rejected , state =>{
+      state.isLoading = false
+    }) 
 })
 
 
