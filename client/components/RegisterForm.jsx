@@ -32,7 +32,7 @@ const RegisterForm = ({ goToLogin }) => {
     const validateForm = () => {
         const newErrors = {}
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        const usernameRegex = /^[a-zA-Z0-9._]+$/  // only letters, numbers, dots, underscores
+        const usernameRegex = /^[a-zA-Z0-9._]+$/ 
 
         if (!registerForm.name.trim()) newErrors.name = "Full name is required"
 

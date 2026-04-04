@@ -69,7 +69,26 @@ export const resendOtp = createAsyncThunk('auth/resend-otp' , async (email, thun
     return await authService.resendOtp(email)
   }
   catch (err){
-    console.log(err)
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
+
+export const sendResetLink = createAsyncThunk('auth/forgot-password' , async (email, thunkAPI)=>{
+  try {
+    return await authService.sendResetLink(email)
+  }
+  catch (err){
+    return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+  }
+})
+
+
+export const resetPassword = createAsyncThunk('auth/reset-password' , async ({token , password , email}, thunkAPI)=>{
+  try {
+    return await authService.resetPassword(token , password , email)
+  }
+  catch (err){
     return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
   }
 })
@@ -88,7 +107,6 @@ export const setEmail = createAsyncThunk('auth/setEmail' , async (email , thunkA
 
 export const setPassword = createAsyncThunk('auth/setPassword' , async (password , thunkAPI)=>{
   try {
-    console.log(password)
     return await authService.setPassword(password)
   }
   catch (err){
@@ -254,6 +272,18 @@ export const authSlice = createSlice({
       state.isLoading = false
     }) 
 
+
+    // sent reset link
+    .addCase(sendResetLink.pending , state =>{
+      state.isLoading = true
+    })
+    .addCase(sendResetLink.fulfilled , state =>{
+      state.isLoading = false
+    }) 
+    .addCase(sendResetLink.rejected , state =>{
+      state.isLoading = false
+    }) 
+
     // resened otp
     .addCase(resendOtp.pending , state =>{
       state.isLoading = true
@@ -262,6 +292,19 @@ export const authSlice = createSlice({
       state.isLoading = false
     }) 
     .addCase(resendOtp.rejected , state =>{
+      state.isLoading = false
+    }) 
+
+
+
+    // reset password
+    .addCase(resetPassword.pending , state =>{
+      state.isLoading = true
+    })
+    .addCase(resetPassword.fulfilled , state =>{
+      state.isLoading = false
+    }) 
+    .addCase(resetPassword.rejected , state =>{
       state.isLoading = false
     }) 
 })

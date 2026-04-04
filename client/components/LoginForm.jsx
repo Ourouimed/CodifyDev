@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/useToast"
 import { GithubAuthBtn } from "./ui/GithubAuthBtn"
 import { GoogleAuthBtn } from "./ui/GoogleAuthBtn"
+import Link from "next/link"
 
 const LoginForm = ({goToRegister})=>{
     const dispatch = useDispatch()
@@ -83,6 +84,9 @@ const LoginForm = ({goToRegister})=>{
             </label>
             <Input id='password' placeholder='password' value={loginForm.password} icon={Lock} onChange={handleChange}/>
             {errors.password && <p className="text-red-500 text-[10px]">{errors.password}</p>}
+            <div className="flex items-center justify-end">
+                <Link href='/forgot-password' className="font-semibold hover:underline duration-300 transition text-xs">forgot password ?</Link>
+            </div>
         </div>
 
 

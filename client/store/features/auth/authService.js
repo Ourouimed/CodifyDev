@@ -54,11 +54,22 @@ const verifyOtp = async (data)=>{
     return respone.data
 }
 
+const sendResetLink = async (email)=>{
+    const respone = await axiosService.post('/api/auth/forgot-password' , {email})
+    return respone.data
+}
+ 
 const resendOtp = async (email)=>{
     const respone = await axiosService.post('/api/auth/resend-otp' , {email})
     return respone.data
 }
 
-const authService = { register , login , verifySession , verifyOtp , resendOtp , 
+const resetPassword = async (token , password , email)=>{
+    const respone = await axiosService.post(`/api/auth/reset-password?token=${token}` , {password , email})
+    return respone.data
+}
+
+const authService = { register , login , verifySession , 
+                verifyOtp , resendOtp , sendResetLink , resetPassword , 
                 logout , updateProfile , setEmail , setPassword , deleteAccount}
 export default authService

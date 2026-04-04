@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux"
 
 const Otp = () => {
     const [otp, setOtp] = useState(new Array(6).fill(""))
+    const [err , setErr] = useState('')
     const [timer , setTimer ] = useState(60)
     const inputRefs = useRef([])
     const params = useSearchParams()
@@ -55,18 +56,19 @@ const Otp = () => {
 
 
     const handleVerifyOtp = async ()=>{
+        if (otp.join('').length < 6 || isNaN(otp.join(''))) return setErr('Please provider a valid otp format')
         try {
+            setErr('')
             await dispatch(verifyOtp({otp : otp.join('') , email})).unwrap();
             toast.success('Email verified successfully')
             setTimeout(()=>{
                 router.push('/auth')
-            }, [1000])
+            }, 1000)
         }
         catch (err){
             toast.error(err || 'An errror ....')
         }
     }
-
 
     const handleResendOtp = async ()=>{
         try {
@@ -151,6 +153,7 @@ const Otp = () => {
                         />
                     ))}
                 </div>
+                {err && <p className="text-[10px] text-red-500 mt-2 text-center">{err}</p>}
             
             <div className="space-y-2">
                 <Button variant="primary" disabled={isLoading} className={`w-full justify-center ${isLoading ? 'opacity-50' : ''}`} onClick={handleVerifyOtp}>
