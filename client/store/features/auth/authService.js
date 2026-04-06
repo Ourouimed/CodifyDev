@@ -1,7 +1,6 @@
 import axiosService from "@/lib/axiosService"
 
 const register = async (data) => {
-    console.log(process.env.NEXT_PUBLIC_API_URL)
     const respone = await axiosService.post(`/api/auth/register` , data)
     return respone.data
 }

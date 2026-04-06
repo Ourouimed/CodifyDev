@@ -4,6 +4,8 @@ import toastReducer from './features/toast/toastSlice'
 import popupReducer from './features/popup/popupSlice'
 import postReducer from './features/posts/postSlice'
 import langReducer from './features/lang/langSlice'
+import eventReducer from './features/events/eventsSlice'
+
 
 export const store = configureStore({
     reducer : {
@@ -11,7 +13,8 @@ export const store = configureStore({
         toast : toastReducer ,
         popup : popupReducer ,
         post : postReducer , 
-        lang : langReducer
+        lang : langReducer ,
+        event : eventReducer
     }
 })
 

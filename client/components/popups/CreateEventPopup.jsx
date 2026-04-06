@@ -1,20 +1,20 @@
 import { useState, useEffect } from "react";
 import { Input } from "../ui/Input";
 import DateTimePicker from "../ui/DateTimePicker";
-import { Calendar, Link, MapPin, Video } from "lucide-react";
+import { Calendar, Link, Loader2, MapPin, Video } from "lucide-react";
 import { TextArea } from "../ui/TextArea";
 import { Button } from "../ui/Button";
 import SwitchBtn from "../ui/SwitchBtn";
 import { useDispatch } from "react-redux";
 import { useToast } from "@/hooks/useToast";
 import { usePopup } from "@/hooks/usePopup";
-import Select from "../ui/Select";
-import { timezones } from "@/lib/timezone";
+import { createEvent } from "@/store/features/events/eventsSlice";
+import { useEvent } from "@/hooks/useEvent";
 
 const CreateEventPopup = () => {
   const [event, setEvent] = useState({
     name: '',
-    timezone: 'UTC', 
+    timezone: '', 
     start: new Date(),
     end: new Date(new Date().setHours(new Date().getHours() + 1)),
     event_type: 'location',
@@ -29,6 +29,7 @@ const CreateEventPopup = () => {
   const [validationErrors, setValidationErrors] = useState({}); 
 
   const { closePopup } = usePopup();
+  const { isLoading } = useEvent()
   const dispatch = useDispatch();
   const toast = useToast();
 
@@ -78,7 +79,7 @@ const CreateEventPopup = () => {
 
     try {
       // Dispatch your action here
-      // await dispatch(createEventAction(event));
+      await dispatch(createEvent(event)).unwrap()
       toast.success("Event created successfully!");
       closePopup();
     } catch (err) {
@@ -108,12 +109,23 @@ const CreateEventPopup = () => {
 
         {/* Timezone */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium">Timezone</label>
-          <Select 
-            value={{value : event.timezone , label : event.timezone}} 
-            options={timezones} 
-            onChange={opt => setEvent(prev => ({...prev, timezone: opt.value}))}
-          />
+        <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Timezone</label>
+            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">
+            AUTO-DETECTED
+            </span>
+        </div>
+        <Input 
+            type='text' 
+            disabled 
+            readOnly 
+            className="bg-border/20 cursor-not-allowed opacity-70" 
+            value={event.timezone}
+        />
+        <p className="text-[11px] text-green-500 mt-1 leading-relaxed">
+            Times are set to your local zone and synced to <strong>UTC</strong> for global reliability. 
+            No manual conversion needed.
+        </p>
         </div>
 
         {/* Dates */}
@@ -233,7 +245,9 @@ const CreateEventPopup = () => {
         {/* Footer Buttons */}
         <div className="flex justify-end gap-3 pt-4">
             <Button variant="outline" onClick={closePopup}>Cancel</Button>
-            <Button onClick={handleCreateEvent}> Create Event <Calendar size={14} className="ml-2"/></Button>
+            <Button disabled={isLoading} className={isLoading ? 'opacity-30' : ''} onClick={handleCreateEvent}>
+                 {isLoading ? 'Creating...' : 'Create Event'} {isLoading ? <Loader2 className="animate-spin" size={14}/> : <Calendar size={14}/>}
+            </Button>
         </div>
       </div>
     </div>
