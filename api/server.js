@@ -9,6 +9,7 @@ import connectDB from './config/db.js';
 import authRouter from './routes/auth.js'
 import postRouter from './routes/post.js'
 import notificationRouter from './routes/notification.js'
+import eventsRouter from './routes/event.js'
 
 import './config/passport.js'
 import { fetchSearchRes } from './controllers/searchController.js';
@@ -37,6 +38,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth' , authRouter)
 app.use('/api/posts' , postRouter)
 app.use('/api/notifications' , notificationRouter)
+app.use('/api/events' , eventsRouter)
 
 // search endpoint 
 app.get('/api/search', fetchSearchRes);
