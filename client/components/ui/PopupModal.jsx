@@ -41,19 +41,19 @@ export const PopupModal = () => {
     <div className="fixed inset-0 z-[61] bg-black/70 flex items-center justify-center p-4">
       <div
         ref={ref}
-        className="relative w-full max-w-md bg-background rounded-md shadow-lg max-h-[90vh] overflow-hidden"
+        className="relative w-full max-w-md bg-background border border-border rounded-md shadow-lg max-h-[90vh] overflow-y-auto"
       >
         {/* Floating Close Button */}
         <Button
           onClick={() => closePopup()}
           variant="outline"
-          className="absolute top-2 right-2 z-10 aspect-square !p-2 rounded-full hover:bg-muted"
+          className="absolute top-2 right-2 z-10 aspect-square !p-2 rounded-full"
         >
           <X size={20} />
         </Button>
 
         {/* Content Area */}
-        <div className="p-6 overflow-y-auto">
+        <div className="p-6 ">
           {Component ? <Component {...props} /> : null}
         </div>
       </div>

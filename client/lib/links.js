@@ -14,7 +14,7 @@ export const sideMenu = [
         name: "Home"
     },
     {
-        url: '/Events',
+        url: '/events',
         icon: Calendar, 
         name: "Events"
     },

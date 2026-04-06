@@ -1,6 +1,6 @@
 export const TextArea = ({ icon: Icon, ...props }) => {
   return (
-    <div className="group w-full border border-border py-2 px-4 rounded-md flex items-center gap-4 
+    <div className="group w-full border border-border bg-border/40 py-2 px-4 rounded-md flex items-center gap-4 
                     transition duration-300z
                     focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
       

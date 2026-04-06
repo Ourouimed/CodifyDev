@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { useToast } from "@/hooks/useToast";
-import { likePost, toggleLikePost, updateFollowStatus, voteInPoll } from "@/store/features/posts/postSlice"; // Add voteInPoll to your slice
+import { likePost, toggleLikePost, updateFollowStatus, voteInPoll } from "@/store/features/posts/postSlice";
 import { followUnfollow } from "@/services/followUnfollow";
 import { useAuth } from "@/hooks/useAuth";
 import { usePopup } from "@/hooks/usePopup";
@@ -81,7 +81,6 @@ const PostCard = ({ post, isExpandedText }) => {
         if (post.poll?.isExpired) return toast.error("This poll has ended");
         
         try {
-            // This thunk should call your new /posts/:postId/vote endpoint
             await dispatch(voteInPoll({ postId: post._id, optionIndex })).unwrap();
             toast.success("Vote recorded");
         } catch (err) {
@@ -109,9 +108,68 @@ const PostCard = ({ post, isExpandedText }) => {
         }
     };
 
+    /**
+     * Helper to render hashtags, mentions, and links
+     */
+    const renderContent = (text) => {
+        if (!text) return "";
+
+        // Regex captures: URLs (http/s), Mentions (@user), and Hashtags (#tag)
+        const regex = /(https?:\/\/[^\s]+|@[a-zA-Z0-9_.]+|#[a-zA-Z0-9_]+)/g;
+        const parts = text.split(regex);
+
+        return parts.map((part, i) => {
+            if (!part) return null;
+
+            // Handle Mentions (@username)
+            if (part.startsWith("@")) {
+                const username = part.slice(1);
+                return (
+                    <Link 
+                        key={i} 
+                        href={`/profile/${username}`}
+                        className="text-primary hover:underline font-semibold"
+                    >
+                        {part}
+                    </Link>
+                );
+            }
+
+            // Handle Hashtags (#tag)
+            if (part.startsWith("#")) {
+                const tagName = part.slice(1);
+                return (
+                    <Link 
+                        key={i} 
+                        href={`/search?q=${encodeURIComponent(tagName)}`}
+                        className="text-primary hover:underline font-medium"
+                    >
+                        {part}
+                    </Link>
+                );
+            }
+
+            // Handle Standard URLs (http://...)
+            if (part.startsWith("http")) {
+                return (
+                    <a 
+                        key={i} 
+                        href={part} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-primary hover:underline break-all"
+                    >
+                        {part}
+                    </a>
+                );
+            }
+
+            return part;
+        });
+    };
+
     const renderPoll = () => {
-        console.log(post?.poll?.options.length)
-        if (post?.poll?.options.length < 2) return null;
+        if (!post?.poll?.options || post.poll.options.length < 2) return null;
 
         const { options, totalVotes, isExpired, userVotedOptionIndex } = post.poll;
         const hasVoted = userVotedOptionIndex !== -1;
@@ -141,7 +199,6 @@ const PostCard = ({ post, isExpandedText }) => {
                                     ${(!hasVoted && !isExpired) ? 'hover:border-primary/50 cursor-pointer' : 'cursor-default'}
                                 `}
                             >
-                                {/* Progress Bar Background */}
                                 {(hasVoted || isExpired) && (
                                     <div 
                                         className={`absolute left-0 top-0 h-full transition-all duration-1000 ${isMyVote ? 'bg-primary/20' : 'bg-muted/50'}`}
@@ -221,7 +278,6 @@ const PostCard = ({ post, isExpandedText }) => {
         );
     };
 
-
     const handleOpenDeletePopup = () => {
         openPopup({
             title: "Delete Post", 
@@ -231,36 +287,11 @@ const PostCard = ({ post, isExpandedText }) => {
         setIsOpen(false);
     }
 
-
-    const parseMentions = (text) => {
-        if (!text) return "";
-        const parts = text.split(/(@[a-zA-Z0-9_.]+)/g);
-
-        return parts.map((part, i) => {
-            if (part.startsWith("@")) {
-                const username = part.slice(1);
-
-                return (
-                    <Link 
-                        key={i} 
-                        href={`/profile/${username}`}
-                        className="text-primary hover:underline font-semibold"
-                    >
-                        {part}
-                    </Link>
-                );
-            }
-
-            return part;
-        });
-    };
-
     return (
         <div className="p-4 rounded-xl border border-border space-y-3 bg-card transition-all hover:shadow-sm">
             {/* Header Section */}
             <div className="flex items-center justify-between gap-3 w-full">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {/* Avatar Section */}
                     <div className="relative w-10 h-10 overflow-hidden rounded-full border border-border flex-shrink-0">
                         {post.author?.avatar ? (
                             <Image
@@ -276,15 +307,12 @@ const PostCard = ({ post, isExpandedText }) => {
                         )}
                     </div>
 
-                    {/* Text Section - uses min-w-0 to allow shrinking for line breaks */}
                     <div className="flex flex-col min-w-0">
                         <Link href={`/profile/${post.author?.username}`} className="hover:underline">
                             <h3 className="font-bold text-sm leading-tight break-words line-clamp-2">
                                 {post.author?.displayName || post.author?.username}
                             </h3>
                         </Link>
-                        
-                        {/* Responsive metadata: Hidden on mobile, shown on medium screens (md) */}
                         <span className="text-xs text-muted-foreground truncate">
                             <span className="hidden md:inline">@{post.author?.username} · </span>
                             {timeAgo}
@@ -292,7 +320,6 @@ const PostCard = ({ post, isExpandedText }) => {
                     </div>
                 </div>
 
-                {/* Actions Section */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                     {post.author?.username !== user?.username && (
                         <Button 
@@ -347,7 +374,8 @@ const PostCard = ({ post, isExpandedText }) => {
 
             {/* Content Text Section */}
             <div className="text-sm leading-relaxed break-words whitespace-pre-wrap">
-                {parseMentions(displayedContent)}
+                {renderContent(displayedContent)}
+                
                 {isLongPost && !isExpanded && (
                     <span 
                         className="text-primary hover:underline font-semibold cursor-pointer ml-1 text-xs" 

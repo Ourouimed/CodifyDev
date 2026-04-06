@@ -1,6 +1,6 @@
 export const Input = ({ icon: Icon, ...props }) => {
   return (
-    <div className="group w-full border border-border py-2 px-4 rounded-md flex items-center gap-4 
+    <div className="group bg-border/40 border border-border py-2 px-4 rounded-md flex items-center gap-4 
                     transition duration-300
                     focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
       
