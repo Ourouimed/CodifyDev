@@ -11,7 +11,10 @@ const EventShema = new Schema({
   unlimited_capacity: { type : Boolean , default : true},
   capacity: {type : Number , default : 50},
   require_approval: { type : Boolean , default : false} ,
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } ,
+  attendees : [
+    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } 
+  ]
 }, { timestamps: true });
 
 const Event = mongoose.model('Event', EventShema);
