@@ -83,6 +83,7 @@ const CreateEventPopup = () => {
       toast.success("Event created successfully!");
       closePopup();
     } catch (err) {
+      console.log(err)
       toast.error("Failed to create event. Please try again.");
     }
   };
