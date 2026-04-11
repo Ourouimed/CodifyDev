@@ -52,7 +52,7 @@ export const EventCard = ({ event: e }) => {
             {e.event_type === 'virtual' && (
             <div className="flex items-center gap-2 text-sm text-primary">
                 <Video size={14} />
-                <span className="truncate">{e.meeting_link}</span>
+                <span className="truncate">Virtual</span>
             </div>
             )}
         </div>
