@@ -212,3 +212,73 @@ export const sendEmailVerifiedConfirmation = async (to, name) => {
 
     await sendEmail(to, htmlContent, textContent, "Your CodifyDev Email is Verified!");
 };
+
+
+export const sendEventConfirmationEmail = async (user, event) => {
+    const ticketUrl = `${process.env.ALLOW_CORS_URL}/events/${event._id}`;
+    
+    // Generate Google Maps link for physical locations
+    const googleMapsUrl = event.location 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`
+        : null;
+
+    // Check if event is virtual
+    const isVirtual = event.event_type === 'virtual' 
+
+    const htmlContent = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; border: 1px solid #e0e0e0; border-radius: 12px; max-width: 500px; margin: auto; color: #333;">
+            <h2 style="color: #16a34a; text-align: center;">Registration Confirmed!</h2>
+            <p style="font-size: 16px; line-height: 1.5;">Hi <strong>${user.displayName}</strong>,</p>
+            <p style="font-size: 16px; line-height: 1.5;">You're all set! We've reserved your spot for <strong>${event.name}</strong>.</p>
+            
+            <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e293b; font-size: 18px;">Event Details</h3>
+                <p style="margin: 5px 0; font-size: 15px;"><strong>📅 Date:</strong> ${new Date(event.start).toLocaleString()}</p>
+                
+                ${isVirtual ? `
+                    <p style="margin: 5px 0; font-size: 15px;"><strong>🌐 Type:</strong> Virtuel</p>
+                    ${event.meeting_link ? `
+                        <p style="margin: 15px 0 5px 0; font-size: 15px;">
+                            <strong>🔗 Meeting Link:</strong> <a href="${event.meeting_link}" style="color: #1a73e8;">Join Here</a>
+                        </p>
+                    ` : ''}
+                ` : `
+                    <p style="margin: 5px 0; font-size: 15px;"><strong>📍 Location:</strong> ${event.location || 'To be announced'}</p>
+                    ${googleMapsUrl ? `
+                        <p style="margin: 5px 0; font-size: 13px;">
+                            <a href="${googleMapsUrl}" style="color: #1a73e8; text-decoration: none;">📍 Open in Google Maps</a>
+                        </p>
+                    ` : ''}
+                `}
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="${ticketUrl}" 
+                    style="display: inline-block; padding: 14px 30px; background-color: #16a34a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;"
+                    target="_blank"
+                >
+                    View Your Ticket
+                </a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="font-size: 0.8em; color: #888; text-align: center;">
+                Need to cancel? Visit your dashboard on CodifyDev.
+            </p>
+        </div>
+    `;
+
+    const textContent = `
+        Hi ${user.displayName}, your registration for ${event.name} is confirmed!
+        Date: ${new Date(event.start).toLocaleString()}
+        ${isVirtual ? `Meeting Link: ${event.meeting_link}` : `Location: ${event.location}`}
+        View your ticket here: ${ticketUrl}
+    `;
+
+    await sendEmail(
+        user.email, 
+        htmlContent, 
+        textContent, 
+        `Confirmation: You're going to ${event.name}!`
+    );
+};

@@ -1,3 +1,4 @@
+import { sendEventConfirmationEmail } from "../lib/send-email.js";
 import Event from "../models/Event.js"; 
 import EventTicket from "../models/EventTicket.js";
 
@@ -95,13 +96,10 @@ const getEvents = async (req, res) => {
         past : pastEvents ,
         myEvents : myEvents
     } });
-  } catch (err) {
-    console.error(err);
-    if (err.name === 'ValidationError') {
-      return res.status(400).json({ error: err.message });
-    }
-    return res.status(500).json({ error: "Internal server error" });
-  }
+  }   catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }  
 };
 
 const getEventById = async (req , res)=>{
@@ -120,22 +118,34 @@ const getEventById = async (req , res)=>{
             error : 'event not found'
         })
 
+
+
+        const isRegistered = event.attendees.some(a => a._id.toString() === currentUserId.toString())
+        const isOwner = event.author._id.toString() === currentUserId.toString()
+
+        console.log(isOwner)
+
+
+        const [ticket] = await EventTicket.find({user : currentUserId})
+
+        // all tickets available 
+        const tickets = await EventTicket.find({event : id} , { _id : 1 , user : 1 })
         const eventRes = {
             ...event.toObject() , 
             isExpired : now > new Date(event.start) ,
-            isRegistered: currentUserId ? event.attendees.some(a => a._id.toString() === currentUserId.toString()) : false ,
-            isOwner: currentUserId ? event.author._id.toString() === currentUserId.toString() : false,
+            isRegistered ,
+            isOwner, 
+            tickets : tickets || [],
+            ...(ticket && {ticket : ticket.toObject()}) ,
+            ...(isRegistered && isOwner && {meeting_link : event.meeting_link}), 
+            
         }
-
 
         console.log(eventRes)
         return res.json(eventRes)
     }
-    catch (err) {
+     catch (err) {
         console.error(err);
-        if (err.name === 'ValidationError') {
-        return res.status(400).json({ error: err.message });
-        }
         return res.status(500).json({ error: "Internal server error" });
     }  
 }
@@ -171,13 +181,19 @@ const joinEvent = async (req , res)=>{
                 attendees : userId
             }, } , {new : true}) 
 
+        let ticket
         if (!event.require_approval) {
-            const ticket = await EventTicket.create({
+            const {_id} = await EventTicket.create({
                 user : userId ,
                 event : id , 
-                approved : true 
             })   
+
+            const [tkt] = await EventTicket.find(_id).populate('user' , 'username displayName email')
+            ticket = tkt
+            if (ticket.user.email) await sendEventConfirmationEmail(ticket.user , event)
         }
+        
+
 
         const populatedEvent = await Event.findById(id)
         .populate('author', 'username avatar displayName followers')
@@ -187,26 +203,73 @@ const joinEvent = async (req , res)=>{
 
         const eventRes = {
             ...populatedEvent.toObject() , 
+            ticket : ticket.toObject(), 
             isExpired : now > new Date(populatedEvent.start) ,
             isRegistered: userId ? populatedEvent.attendees.some(a => a._id.toString() === userId.toString()) : false ,
             isOwner: userId ? populatedEvent.author._id.toString() === userId.toString() : false,
         }
 
+
         return res.json(eventRes)
         
-
-        
     }
 
 
-     catch (err) {
+      catch (err) {
         console.error(err);
-        if (err.name === 'ValidationError') {
-        return res.status(400).json({ error: err.message });
-        }
         return res.status(500).json({ error: "Internal server error" });
-    }
+    }  
 }
 
 
-export { createEvent , getEvents , getEventById , joinEvent};
+const getTicketDetails = async (req, res) => {
+    try {
+        const { id } = req.params
+        const ticket = await EventTicket.findById(id)
+            .populate('user', 'displayName username avatar')
+            .populate('event', 'name start end author');
+
+        if (!ticket) return res.status(404).json({ error: "Ticket not found" });
+        
+        if (ticket.event.author.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ error: "Unauthorized access" });
+        }
+
+        return res.json(ticket);
+    }  catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }  
+};
+
+
+const verifyTicket = async (req, res) => {
+    try {
+        const { id } = req.params
+        const ticket = await EventTicket.findById(id);
+
+        if (!ticket) return res.status(404).json({ error: "Invalid Ticket" });
+        
+        if (ticket.status === 'used') {
+            return res.status(400).json({ 
+                message: "Ticket already used", 
+                scannedAt: ticket.scannedAt 
+            });
+        }
+
+        ticket.status = 'used';
+        ticket.scannedAt = new Date();
+        await ticket.save();
+
+        const updatedTicket = await EventTicket.findById(ticket._id)
+            .populate('user', 'displayName username avatar')
+            .populate('event', 'name start end author');
+
+        res.json(updatedTicket);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }  
+};
+
+export { createEvent , getEvents , getEventById , joinEvent , getTicketDetails , verifyTicket};
