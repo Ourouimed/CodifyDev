@@ -23,7 +23,12 @@ const accept_attendee = async (eventId , userId) => {
     return respone.data
 }
 
+const deleteEvent = async (eventId) => {
+    const response = await axiosService.delete(`/api/events/delete/${eventId}`);
+    return response.data;
+};
 
 
-const eventsService = { create , get , join , accept_attendee}
+
+const eventsService = { create , get , join , accept_attendee , deleteEvent}
 export default eventsService

@@ -45,6 +45,15 @@ export const accept_attendee = createAsyncThunk('events/accept_attendee' , async
     }
 })
 
+export const deleteEvent = createAsyncThunk('events/delete' , async (eventId , thunkAPI)=>{
+    try {
+        return await eventsService.deleteEvent(eventId)
+    }
+    catch (err){
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const eventSlice = createSlice({
     name : 'event' , 
     initialState : {
@@ -104,6 +113,18 @@ export const eventSlice = createSlice({
     })
     .addCase(accept_attendee.rejected , (state )=>{
         state.isAccepting= false
+    })
+
+
+     // delete event 
+    .addCase(deleteEvent.pending , (state)=>{
+        state.isLoading = true
+    })
+    .addCase(deleteEvent.fulfilled , (state , action)=>{
+        state.isLoading = false
+    })
+    .addCase(deleteEvent.rejected , (state , action)=>{
+        state.isLoading = false
     })
 })
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import FeedLayout from "@/app/FeedLayout"
 import axiosService from "@/lib/axiosService"
-import { Calendar, MapPin, Users, ShieldCheck, Video, MoreVertical, Loader2, CheckCircle2, ExternalLink, X, Check } from "lucide-react"
+import { Calendar, MapPin, Users, ShieldCheck, Video, Loader2, CheckCircle2, ExternalLink, X, Check, Trash2 } from "lucide-react"
 import { formatSmartDate } from "@/lib/date"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
@@ -12,6 +12,7 @@ import { accept_attendee, joinEvent } from "@/store/features/events/eventsSlice"
 import { useDispatch } from "react-redux"
 import { useEvent } from "@/hooks/useEvent"
 import QRCode from "react-qr-code"
+import { usePopup } from "@/hooks/usePopup"
 
 const EventPage = () => {
     const { eventId } = useParams()
@@ -20,6 +21,7 @@ const EventPage = () => {
 
     const { isJoining , isAccepting} = useEvent()
     const toast = useToast()
+    const { openPopup } = usePopup()
     const dispatch = useDispatch()
 
     useEffect(() => {
@@ -102,8 +104,13 @@ const EventPage = () => {
                     </div>
 
                     {event.isOwner && (
-                        <Button variant="outline" size="icon" className="shrink-0">
-                            <MoreVertical size={18} />
+                        <Button 
+                            onClick={()=> openPopup({title : 'Delete event' , component : 'DeleteEventPopup' , props : {
+                                id : event._id , name : event.name
+                            }})}
+                            variant="outline" size="sm" className="shrink-0 !border-red-500 !text-red-500 hover:!bg-red-500 hover:!text-white" >
+                            Delete event
+                            <Trash2 size={18} />
                         </Button>
                     )}
                 </header>
