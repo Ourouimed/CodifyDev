@@ -34,11 +34,23 @@ export const joinEvent = createAsyncThunk('events/join' , async (eventId , thunk
     }
 })
 
+
+export const accept_attendee = createAsyncThunk('events/accept_attendee' , async ({eventId , userId} , thunkAPI)=>{
+    try {
+        return await eventsService.accept_attendee(eventId , userId)
+    }
+    catch (err){
+        console.log(err)
+        return thunkAPI.rejectWithValue(err.response?.data?.error || "Unknown Error");
+    }
+})
+
 export const eventSlice = createSlice({
     name : 'event' , 
     initialState : {
         isLoading : false ,
         isJoining : false ,
+        isAccepting : false,
         events : {}
     },
 
@@ -80,6 +92,18 @@ export const eventSlice = createSlice({
     })
     .addCase(joinEvent.rejected , (state )=>{
         state.isJoining= false
+    })
+
+
+    // accepot an attenddee 
+    .addCase(accept_attendee.pending , (state)=>{
+        state.isAccepting= true
+    })
+    .addCase(accept_attendee.fulfilled , (state , action)=>{
+        state.isAccepting= false
+    })
+    .addCase(accept_attendee.rejected , (state )=>{
+        state.isAccepting= false
     })
 })
 

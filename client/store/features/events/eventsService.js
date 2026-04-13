@@ -18,6 +18,12 @@ const get = async () => {
 }
 
 
+const accept_attendee = async (eventId , userId) => {
+    const respone = await axiosService.post(`/api/events/accept_attendee/${eventId}` , {userId})
+    return respone.data
+}
 
-const eventsService = { create , get , join}
+
+
+const eventsService = { create , get , join , accept_attendee}
 export default eventsService

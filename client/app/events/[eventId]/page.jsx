@@ -8,7 +8,7 @@ import { formatSmartDate } from "@/lib/date"
 import { Button } from "@/components/ui/Button"
 import Link from "next/link"
 import { useToast } from "@/hooks/useToast"
-import { joinEvent } from "@/store/features/events/eventsSlice"
+import { accept_attendee, joinEvent } from "@/store/features/events/eventsSlice"
 import { useDispatch } from "react-redux"
 import { useEvent } from "@/hooks/useEvent"
 import QRCode from "react-qr-code"
@@ -18,7 +18,7 @@ const EventPage = () => {
     const [event, setEvent] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    const { isJoining } = useEvent()
+    const { isJoining , isAccepting} = useEvent()
     const toast = useToast()
     const dispatch = useDispatch()
 
@@ -48,6 +48,17 @@ const EventPage = () => {
         }
     }
 
+
+    const handleAcceptEventAttendee = async (id) => {
+        try {
+            const updatedEvent = await dispatch(accept_attendee({eventId , userId : id})).unwrap()
+            setEvent(updatedEvent)
+            toast.success('Successfully registered for the event!')
+        } catch (err) {
+            toast.error(err || 'Failed to join event')
+        }
+    }
+
     const getButtonContent = () => {
         if (isJoining) return <><Loader2 size={14} className="animate-spin" /> Processing...</>
         if (event.isOwner) return "You are the Host"
@@ -55,6 +66,8 @@ const EventPage = () => {
         if (event.isExpired) return "Registration ended"
         return "Register now"
     }
+
+
 
     if (loading) return <FeedLayout><div className="flex items-center justify-center min-h-[50vh]"><Loader2 className="animate-spin text-primary" /></div></FeedLayout>
     if (!event) return <FeedLayout><div className="p-8 text-center text-gray-500">Event not found.</div></FeedLayout>
@@ -138,7 +151,7 @@ const EventPage = () => {
 
                     {/* Right Sidebar */}
                     <aside className="space-y-4 col-span-2 sticky top-4">
-                        {event.isRegistered && event.ticket?._id && (
+                        {event.isRegistered && event?.ticket?._id && (
                             <div className="p-4 rounded-xl border border-border flex flex-col items-center gap-4 shadow-sm bg-card">
                                 <div className="w-full flex justify-between items-center mb-2">
                                     <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Your Entry Ticket</span>
@@ -241,7 +254,11 @@ const EventPage = () => {
                         <div className="p-4 rounded-xl border border-border bg-card space-y-4">
                             <h4 className="font-semibold">Attendees </h4>
                             <div className="divide-y divide-border">
-                                {event?.attendees.map(a => <div key={a._id} className="p-2 flex items-center justify-between gap-2">
+                                {event?.attendees.map(a => {
+                                    
+                                    const isApproved = !event?.require_approval || event?.tickets.some(e => e.user.toString() === a._id.toString())
+                                    return (
+                                    <div key={a._id} className="p-2 flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         <img src={a.avatar} className="size-8 rounded-full"/>
                                         <div>
@@ -249,12 +266,25 @@ const EventPage = () => {
                                             <span className="text-xs text-gray-400 block">@{a.username}</span>
                                         </div>
                                     </div>
-                                    {event.isOwner && <div className="flex items-center gap-2">
-                                        <button className="text-red-500 border border-red-500 p-2 cursor-pointer rounded-md hover:bg-red-500 hover:text-white transition duration-300 " size="sm"><X size={14}/></button>
-                                        <button className="text-green-500 border border-green-500 p-2 cursor-pointer rounded-md hover:bg-green-500 hover:text-white transition duration-300" size="sm"><Check size={14}/></button>
-                                    </div>}
+                                    {event.isOwner ?
+                                     !isApproved ?
+                                      <div className="flex items-center gap-2">
+                                        <button className=
+                                                {`text-green-500 border border-green-500 border border-green-500 p-2 ${isAccepting ? 'opacity-30' : 'opacity-100'}
+                                                    cursor-pointer rounded-md hover:bg-green-500 hover:text-white transition duration-300`}
+                                                onClick={()=>handleAcceptEventAttendee(a._id)}
+                                                disabled={isAccepting}>
+                                                {isAccepting ? <Loader2 className="animate-spin" size={14}/> : <Check size={14}/>}
+                                        </button>
+                                      </div>
+                                      : <span className="px-4 py-1 text-xs rounded-full bg-green-500/30 text-green-500 border border-green-500">approved</span>
+                                    : 
+                                    !isApproved ? <span className="px-4 py-1 text-xs rounded-full bg-yellow-500/30 text-yellow-500 border border-yellow-500">pending</span> 
+                                    : <span className="px-4 py-1 text-xs rounded-full bg-green-500/30 text-green-500 border border-green-500">approved</span>
+                                    }
                                     
-                                </div>)}
+                                </div>)
+                            })}
                             </div>
                             
                         </div>

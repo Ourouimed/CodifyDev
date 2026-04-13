@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button"
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher"
 import { Code2 } from "lucide-react"
 import Link from "next/link"
+import Footer from "../components/sections/Footer"
 
 const Home = ()=>{
     return <>
@@ -29,7 +30,7 @@ const Home = ()=>{
             <Hero/>
             <Features/>
             {/* <GlowBackground/>         */}
-            
+            <Footer/>
         </main>
 
     </>
