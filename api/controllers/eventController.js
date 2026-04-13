@@ -123,10 +123,9 @@ const getEventById = async (req , res)=>{
         const isRegistered = event.attendees.some(a => a._id.toString() === currentUserId.toString())
         const isOwner = event.author._id.toString() === currentUserId.toString()
 
-        console.log(isOwner)
 
 
-        const [ticket] = await EventTicket.find({user : currentUserId})
+        const [ticket] = await EventTicket.find({user : currentUserId , event : event._id})
 
         // all tickets available 
         const tickets = await EventTicket.find({event : id} , { _id : 1 , user : 1 })
@@ -137,11 +136,10 @@ const getEventById = async (req , res)=>{
             isOwner, 
             tickets : tickets || [],
             ...(ticket && {ticket : ticket.toObject()}) ,
-            ...(isRegistered && isOwner && {meeting_link : event.meeting_link}), 
+            ...(isRegistered || isOwner && {meeting_link : event.meeting_link}), 
             
         }
 
-        console.log(eventRes)
         return res.json(eventRes)
     }
      catch (err) {
@@ -200,13 +198,16 @@ const joinEvent = async (req , res)=>{
         .populate('attendees', 'username avatar displayName') 
 
         
-
+        // all tickets available 
+        const tickets = await EventTicket.find({event : id} , { _id : 1 , user : 1 }) 
         const eventRes = {
             ...populatedEvent.toObject() , 
-            ticket : ticket.toObject(), 
+            ...(ticket && {ticket: ticket.toObject()}) , 
+            tickets ,
             isExpired : now > new Date(populatedEvent.start) ,
             isRegistered: userId ? populatedEvent.attendees.some(a => a._id.toString() === userId.toString()) : false ,
             isOwner: userId ? populatedEvent.author._id.toString() === userId.toString() : false,
+            ...(isRegistered || isOwner && {meeting_link : event.meeting_link}), 
         }
 
 
@@ -216,6 +217,76 @@ const joinEvent = async (req , res)=>{
 
 
       catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Internal server error" });
+    }  
+}
+
+
+const acceptEventAttendee = async (req , res)=>{
+    try {
+        const { eventId } = req.params
+        const { userId } = req.body
+        const ownerId = req.user.id
+        
+        const now = new Date()
+        
+        
+        if (!userId || !eventId) return res.status(400).json({error : 'Some required fields are missing'})
+
+        const event = await Event.findById(eventId)
+        if(!event) return res.status(404).json({error : 'Event not found'})
+
+
+        if (ownerId !== event.author.toString()) return res.status(403).json({error : 'Your do not have acces to this action'})
+
+        const user = await Event.find({ attendees : userId })
+        if(!user) return res.status(404).json({error : 'User not registred in this event'})
+
+        const [existingTicket] = await EventTicket.find({user :userId , event : eventId})
+        if (existingTicket) return res.status(400).json({error : 'User Already accepted'}) 
+
+
+        const {_id} = await EventTicket.create({
+            user : userId ,
+            event : eventId , 
+        })   
+
+        const [ticket] = await EventTicket.find(_id).populate('user' , 'username displayName email')
+        if (ticket.user.email) await sendEventConfirmationEmail(ticket.user , event)
+
+
+        
+
+
+        
+
+
+        const populatedEvent = await Event.findById(eventId)
+        .populate('author', 'username avatar displayName followers')
+        .populate('attendees', 'username avatar displayName') 
+
+
+        const isRegistered = populatedEvent.attendees.some(a => a._id.toString() === userId.toString())
+        const isOwner = populatedEvent.author._id.toString() === userId.toString()
+        const isExpired = now > new Date(populatedEvent.start)
+
+        // all tickets available 
+        const tickets = await EventTicket.find({event : eventId} , { _id : 1 , user : 1 }) 
+
+        const eventRes = {
+            ...populatedEvent.toObject() , 
+            tickets ,
+            isExpired  ,
+            isRegistered ,
+            isOwner ,
+            ...(isRegistered || isOwner && {meeting_link : populatedEvent.meeting_link}), 
+        }
+
+
+        return res.json(eventRes)
+    }
+    catch (err) {
         console.error(err);
         return res.status(500).json({ error: "Internal server error" });
     }  
@@ -272,4 +343,4 @@ const verifyTicket = async (req, res) => {
     }  
 };
 
-export { createEvent , getEvents , getEventById , joinEvent , getTicketDetails , verifyTicket};
+export { createEvent , getEvents , getEventById , joinEvent , getTicketDetails , verifyTicket , acceptEventAttendee};
