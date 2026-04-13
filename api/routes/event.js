@@ -1,6 +1,6 @@
 import express from 'express'
 import verifyJWT from '../middlewares/verifyJWT.js';
-import { acceptEventAttendee, createEvent, getEventById, getEvents, getTicketDetails, joinEvent, verifyTicket } from '../controllers/eventController.js';
+import { acceptEventAttendee, createEvent, deleteEvent, getEventById, getEvents, getTicketDetails, joinEvent, verifyTicket } from '../controllers/eventController.js';
 
 const router = express.Router()
 
@@ -14,6 +14,9 @@ router.get('/check_ticket/:id' , verifyJWT , getTicketDetails)
 router.post('/verify_ticket/:id' , verifyJWT , verifyTicket)
 
 router.post('/accept_attendee/:eventId' , verifyJWT , acceptEventAttendee)
+
+
+router.delete('/delete/:eventId' , verifyJWT , deleteEvent)
 
 
 export default router

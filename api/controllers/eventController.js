@@ -343,4 +343,21 @@ const verifyTicket = async (req, res) => {
     }  
 };
 
-export { createEvent , getEvents , getEventById , joinEvent , getTicketDetails , verifyTicket , acceptEventAttendee};
+const deleteEvent = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const event = await Event.findById(eventId);
+        if (!event) return res.status(404).json({ error: 'Event not found' });
+        if (event.author.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+        await Event.findByIdAndDelete(eventId);
+        await EventTicket.deleteMany({ event :  eventId }); 
+        return res.json({ message: 'Event deleted successfully' });
+    } catch (err) {
+        console.log(err)
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+};
+
+
+export { createEvent , getEvents , deleteEvent ,  getEventById , joinEvent , getTicketDetails , verifyTicket , acceptEventAttendee};
