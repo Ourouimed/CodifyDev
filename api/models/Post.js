@@ -18,7 +18,8 @@ const PostSchema = new Schema({
         ],
         expiresAt: { type: Date }
     },
-    mentions: [{ type: Schema.Types.ObjectId, ref: 'User' }]
+    mentions: [{ type: Schema.Types.ObjectId, ref: 'User' }] ,
+    communityId : { type : Schema.Types.ObjectId , ref : 'Community' }
 }, { timestamps: true });
 
 PostSchema.virtual('totalVotes').get(function() {

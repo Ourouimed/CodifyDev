@@ -10,6 +10,7 @@ import authRouter from './routes/auth.js'
 import postRouter from './routes/post.js'
 import notificationRouter from './routes/notification.js'
 import eventsRouter from './routes/event.js'
+import communityRouter from './routes/communities.js'
 
 import './config/passport.js'
 import { fetchSearchRes } from './controllers/searchController.js';
@@ -39,6 +40,7 @@ app.use('/api/auth' , authRouter)
 app.use('/api/posts' , postRouter)
 app.use('/api/notifications' , notificationRouter)
 app.use('/api/events' , eventsRouter)
+app.use('/api/communities' , communityRouter)
 
 // search endpoint 
 app.get('/api/search', fetchSearchRes);
