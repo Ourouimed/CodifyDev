@@ -8,8 +8,7 @@ import Link from "next/link"
 import axiosService from "@/lib/axiosService"
 import NotificationDropdown from "./NotificationDropdown"
 import { getNotifications } from "@/services/getNotifications"
-import { useParams, useSearchParams } from "next/navigation"
-import c from "highlight.js/lib/languages/c"
+import { useSearchParams } from "next/navigation"
 import LanguageSwitcher from "./ui/LanguageSwitcher"
 
 const Header = ({ user, onLogout }) => {
@@ -90,7 +89,7 @@ const Header = ({ user, onLogout }) => {
             </div>
 
             <div className="flex items-center gap-3">
-                <LanguageSwitcher/>
+                {/* <LanguageSwitcher/> */}
                 <div className="relative" ref={notificationRef}>
                     <Button variant="outline" className="!p-2 sm:flex relative" onClick={() => setNotifIsOpen(!notifIsOpen)}>
                         <Bell size={14}/>

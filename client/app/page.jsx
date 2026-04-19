@@ -21,7 +21,7 @@ const Home = ()=>{
                     </h3>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <LanguageSwitcher/>
+                    {/* <LanguageSwitcher/> */}
                     <Button href="/auth">Get started</Button>
                 </div>
         </header>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 const Sidebar = () => {
   const path = usePathname()
   return (
-    <aside className="md:sticky hidden md:block top-20 h-fit bg-background rounded-2xl border border-border p-4 space-y-2">
+    <aside className="md:sticky hidden md:block top-20 bg-background border-r h-full border-border p-4 space-y-2">
       {sideMenu.map(({ url, name, icon: Icon }, i) => {
         const isActive = path === url;
         return (

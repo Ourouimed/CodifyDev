@@ -5,6 +5,7 @@ import popupReducer from './features/popup/popupSlice'
 import postReducer from './features/posts/postSlice'
 import langReducer from './features/lang/langSlice'
 import eventReducer from './features/events/eventsSlice'
+import communityReducer from './features/communities/communitySlice'
 
 
 export const store = configureStore({
@@ -14,7 +15,8 @@ export const store = configureStore({
         popup : popupReducer ,
         post : postReducer , 
         lang : langReducer ,
-        event : eventReducer
+        event : eventReducer ,
+        community : communityReducer ,
     }
 })
 
